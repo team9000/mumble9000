@@ -164,10 +164,12 @@ struct Settings {
 	enum ChannelDrag { Ask, DoNothing, Move };
 	enum ServerShow { ShowPopulated, ShowReachable, ShowAll };
 	enum TalkState { Passive, Talking, Whispering, Shouting };
+	enum IdleAction { Nothing, Deafen, Mute };
 	typedef QPair<QList<QSslCertificate>, QSslKey> KeyPair;
 
 	AudioTransmit atTransmit;
 	quint64 uiDoublePush;
+	quint64 uiPTTHold;
 
 	bool bExpert;
 
@@ -186,7 +188,11 @@ struct Settings {
 	int iTTSVolume, iTTSThreshold;
 	int iQuality, iMinLoudness, iVoiceHold, iJitterBufferSize;
 	int iNoiseSuppress;
+
+	// Idle auto actions
 	unsigned int iIdleTime;
+	IdleAction iaeIdleAction;
+
 	VADSource vsVAD;
 	float fVADmin, fVADmax;
 	int iFramesPerPacket;
@@ -222,6 +228,8 @@ struct Settings {
 	int iLCDUserViewSplitterWidth;
 	QMap<QString, bool> qmLCDDevices;
 
+	bool bShortcutEnable;
+	bool bSuppressMacEventTapWarning;
 	QList<Shortcut> qlShortcuts;
 
 	enum MessageLog { LogNone = 0x00, LogConsole = 0x01, LogTTS = 0x02, LogBalloon = 0x04, LogSoundfile = 0x08};
@@ -247,6 +255,7 @@ struct Settings {
 	bool bStateInTray;
 	bool bUsage;
 	bool bShowUserCount;
+	bool bChatBarUseSelection;
 	QByteArray qbaConnectDialogHeader, qbaConnectDialogGeometry;
 	bool bShowContextMenuInMenuBar;
 
@@ -257,7 +266,7 @@ struct Settings {
 	QString qsImagePath;
 
 	bool bUpdateCheck;
-	bool bPluginOverlayCheck;
+	bool bPluginCheck;
 
 	// PTT Button window
 	bool bShowPTTButtonWindow;
@@ -290,6 +299,9 @@ struct Settings {
 	enum RecordingMode { RecordingMixdown, RecordingMultichannel };
 	RecordingMode rmRecordingMode;
 	int iRecordingFormat;
+
+	// Codec kill-switch
+	bool bDisableCELT;
 
 	// Config updates
 	unsigned int uiUpdateCounter;

@@ -112,10 +112,12 @@ class MainWindow : public QMainWindow, public MessageHandler, public Ui::MainWin
 		void recheckTTS();
 		void msgBox(QString msg);
 		void setOnTop(bool top);
+		void setShowDockTitleBars(bool doShow);
 		void updateTrayIcon();
 		QPair<QByteArray, QImage> openImageFile();
 		static const QString defaultStyleSheet;
 
+		void updateChatBar();
 		void openTextMessageDialog(ClientUser *p);
 
 #ifdef Q_OS_WIN
@@ -147,6 +149,7 @@ class MainWindow : public QMainWindow, public MessageHandler, public Ui::MainWin
 		void setupView(bool toggle_minimize = true);
 		virtual void closeEvent(QCloseEvent *e);
 		virtual void hideEvent(QHideEvent *e);
+		virtual void showEvent(QShowEvent *e);
 
 		bool handleSpecialContextMenu(const QUrl &url, const QPoint &pos_, bool focus = false);
 		Channel* getContextMenuChannel();
@@ -226,6 +229,7 @@ class MainWindow : public QMainWindow, public MessageHandler, public Ui::MainWin
 		void on_gsDeafSelf_down(QVariant);
 		void on_gsWhisper_triggered(bool, QVariant);
 		void on_Reconnect_timeout();
+		void on_Icon_messageClicked();
 		void on_Icon_activated(QSystemTrayIcon::ActivationReason);
 		void voiceRecorderDialog_finished(int);
 		void qtvUserCurrentChanged(const QModelIndex &, const QModelIndex &);
@@ -240,6 +244,9 @@ class MainWindow : public QMainWindow, public MessageHandler, public Ui::MainWin
 		void destroyUserInformation();
 		void trayAboutToShow();
 		void sendChatbarMessage(QString msg);
+		void pttReleased();
+		void whisperReleased(QVariant scdata);
+		void onResetAudio();
 	public:
 		MainWindow(QWidget *parent);
 		~MainWindow();

@@ -3,6 +3,10 @@ include(../compiler.pri)
 BUILDDIR=$$basename(PWD)
 SOURCEDIR=$$replace(BUILDDIR,-build,-src)
 
+!win32 {
+	VERSION=0 #$$ Fool packaging script
+}
+
 !exists(../$$SOURCEDIR/COPYING) {
 	message("The $$SOURCEDIR/ directory was not found. You need to do one of the following:")
 	message("")
@@ -27,18 +31,19 @@ win32 {
   DEFINES += WIN32 _WIN32
   INCLUDEPATH += ../$$BUILDDIR/win32
 
-  # fixes broken audio in release builds
-  QMAKE_CFLAGS_RELEASE -= /fp:fast
-
   CONFIG(sse2) {
-    TARGET_VERSION_EXT = .$${VERSION}.sse2
+    TARGET_VERSION_EXT = .sse2
   } else {
     QMAKE_CFLAGS_RELEASE -= -arch:SSE
     QMAKE_CFLAGS_DEBUG -= -arch:SSE
   }
 }
 
-unix:INCLUDEPATH += ../$$BUILDDIR
+unix {
+  CONFIG += staticlib
+  QMAKE_CFLAGS += -x c++
+  INCLUDEPATH += ../$$BUILDDIR
+}
 
 DIST = config.h
 
@@ -187,6 +192,15 @@ CONFIG(debug, debug|release) {
 
 CONFIG(release, debug|release) {
 	DESTDIR = ../release
+}
+
+macx:!CONFIG(static) {
+	libname.target = libname
+	libname.commands = cd ${DESTDIR} && install_name_tool -id `pwd`/${TARGET} ${TARGET}
+	libname.depends = ${DESTDIR}${TARGET}
+	libname.CONFIG = recursive
+	QMAKE_EXTRA_TARGETS *= libname
+	ALL_DEPS += libname
 }
 
 include(../symbols.pri)

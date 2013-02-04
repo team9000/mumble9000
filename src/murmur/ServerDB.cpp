@@ -247,7 +247,7 @@ void Server::setConf(const QString &key, const QVariant &value) {
 	ServerDB::setConf(iServerNum, key, value);
 }
 
-void Server::dblog(const QString &str) {
+void Server::dblog(const QString &str) const {
 }
 
 void ServerDB::wipeLogs() {

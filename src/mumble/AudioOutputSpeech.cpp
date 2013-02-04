@@ -34,6 +34,7 @@
 #include "AudioOutputSpeech.h"
 
 #include "Audio.h"
+#include "CELTCodec.h"
 #include "ClientUser.h"
 #include "Global.h"
 #include "PacketDataStream.h"
@@ -53,6 +54,7 @@ AudioOutputSpeech::AudioOutputSpeech(ClientUser *user, unsigned int freq, Messag
 	dsSpeex = NULL;
 	opusState = NULL;
 
+	bHasTerminator = false;
 	bStereo = false;
 
 	iSampleRate = SAMPLE_RATE;
@@ -145,24 +147,20 @@ void AudioOutputSpeech::addFrameToBuffer(const QByteArray &qbaPacket, unsigned i
 	if (umtType == MessageHandler::UDPVoiceOpus) {
 		int size;
 		pds >> size;
+		size &= 0x1fff;
 
-		if (size > 0) {
-			const QByteArray &qba = pds.dataBlock(size);
-			const unsigned char *packet = reinterpret_cast<const unsigned char*>(qba.constData());
+		const QByteArray &qba = pds.dataBlock(size);
+		const unsigned char *packet = reinterpret_cast<const unsigned char*>(qba.constData());
 
 #ifdef USE_OPUS
-			int frames = opus_packet_get_nb_frames(packet, size);
-			samples = frames * opus_packet_get_samples_per_frame(packet, SAMPLE_RATE);
+		int frames = opus_packet_get_nb_frames(packet, size);
+		samples = frames * opus_packet_get_samples_per_frame(packet, SAMPLE_RATE);
 #else
-			return;
+		return;
 #endif
 
-			// We can't handle frames which are not a multiple of 10ms.
-			Q_ASSERT(samples % iFrameSize == 0);
-		} else {
-			// Prevents a jitter buffer warning for terminator packets.
-			samples = iFrameSize;
-		}
+		// We can't handle frames which are not a multiple of 10ms.
+		Q_ASSERT(samples % iFrameSize == 0);
 	} else {
 		unsigned int header = 0;
 
@@ -266,10 +264,8 @@ bool AudioOutputSpeech::needSamples(unsigned int snum) {
 						int size;
 						pds >> size;
 
-						if (size > 0)
-							qlFrames << pds.dataBlock(size);
-						else
-							bHasTerminator = true;
+						bHasTerminator = size & 0x2000;
+						qlFrames << pds.dataBlock(size & 0x1fff);
 					} else {
 						unsigned int header = 0;
 						do {
@@ -331,9 +327,14 @@ bool AudioOutputSpeech::needSamples(unsigned int snum) {
 						memset(pOut, 0, sizeof(float) * iFrameSize);
 				} else if (umtType == MessageHandler::UDPVoiceOpus) {
 #ifdef USE_OPUS
-					decodedSamples = opus_decode_float(opusState, qba.isEmpty() ? NULL : reinterpret_cast<const unsigned char *>(qba.constData()), qba.size(), pOut, iAudioBufferSize, 0);
-					iOutputSize = static_cast<unsigned int>(ceilf(static_cast<float>(decodedSamples * iMixerFreq) / static_cast<float>(iSampleRate)));
-					resizeBuffer(iBufferFilled + iOutputSize);
+					decodedSamples = opus_decode_float(opusState,
+					                                   qba.isEmpty() ?
+					                                       NULL :
+					                                       reinterpret_cast<const unsigned char *>(qba.constData()),
+					                                   qba.size(),
+					                                   pOut,
+					                                   iAudioBufferSize,
+					                                   0);
 #endif
 				} else {
 					if (qba.isEmpty()) {
@@ -382,7 +383,7 @@ bool AudioOutputSpeech::needSamples(unsigned int snum) {
 						memset(pOut, 0, sizeof(float) * iFrameSize);
 				} else if (umtType == MessageHandler::UDPVoiceOpus) {
 #ifdef USE_OPUS
-					opus_decode_float(opusState, NULL, 0, pOut, iFrameSize, 0);
+					decodedSamples = opus_decode_float(opusState, NULL, 0, pOut, iFrameSize, 0);
 #endif
 				} else {
 					speex_decode(dsSpeex, NULL, pOut);
@@ -405,7 +406,7 @@ bool AudioOutputSpeech::needSamples(unsigned int snum) {
 		}
 nextframe:
 		spx_uint32_t inlen = decodedSamples;
-		spx_uint32_t outlen = iOutputSize;
+		spx_uint32_t outlen = static_cast<unsigned int>(ceilf(static_cast<float>(decodedSamples * iMixerFreq) / static_cast<float>(iSampleRate)));
 		if (srs && bLastAlive)
 			speex_resampler_process_float(srs, 0, fResamplerBuffer, &inlen, pfBuffer + iBufferFilled, &outlen);
 		iBufferFilled += outlen;

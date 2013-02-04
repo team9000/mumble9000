@@ -34,6 +34,8 @@
 
 #include <sndfile.h>
 #include <speex/speex_resampler.h>
+#include <QtCore/QObject>
+#include <QtCore/QFile>
 
 #include "AudioOutputUser.h"
 
@@ -76,7 +78,6 @@ class AudioOutputSample : public AudioOutputUser {
 
 		SoundFile *sfHandle;
 
-		bool bLastAlive;
 		bool bLoop;
 		bool bEof;
 	signals:

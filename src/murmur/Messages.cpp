@@ -40,7 +40,6 @@
 #include "Connection.h"
 #include "Server.h"
 #include "ServerUser.h"
-#include "DBus.h"
 #include "Version.h"
 
 #define MSG_SETUP(st) \
@@ -202,14 +201,16 @@ void Server::msgAuthenticate(ServerUser *uSource, MumbleProto::Authenticate &msg
 	mpcrypt.set_client_nonce(std::string(reinterpret_cast<const char *>(uSource->csCrypt.decrypt_iv), AES_BLOCK_SIZE));
 	sendMessage(uSource, mpcrypt);
 
+	bool fake_celt_support = false;
 	if (msg.celt_versions_size() > 0) {
 		for (int i=0;i < msg.celt_versions_size(); ++i)
 			uSource->qlCodecs.append(msg.celt_versions(i));
 	} else {
 		uSource->qlCodecs.append(static_cast<qint32>(0x8000000b));
+		fake_celt_support = true;
 	}
 	uSource->bOpus = msg.opus();
-	recheckCodecVersions();
+	recheckCodecVersions(uSource);
 
 	MumbleProto::CodecVersion mpcv;
 	mpcv.set_alpha(iCodecAlpha);
@@ -217,6 +218,10 @@ void Server::msgAuthenticate(ServerUser *uSource, MumbleProto::Authenticate &msg
 	mpcv.set_prefer_alpha(bPreferAlpha);
 	mpcv.set_opus(bOpus);
 	sendMessage(uSource, mpcv);
+
+	if (!bOpus && uSource->bOpus && fake_celt_support) {
+		sendTextMessage(NULL, uSource, false, QLatin1String("<strong>WARNING:</strong> Your client doesn't support the CELT codec, you won't be able to talk to or hear most clients. Please make sure your client was built with CELT support."));
+	}
 
 	// Transmit channel tree
 	QQueue<Channel *> q;
@@ -381,7 +386,9 @@ void Server::msgAuthenticate(ServerUser *uSource, MumbleProto::Authenticate &msg
 		mpsug.set_positional(qvSuggestPositional.toBool());
 	if (! qvSuggestPushToTalk.isNull())
 		mpsug.set_push_to_talk(qvSuggestPushToTalk.toBool());
-	sendMessage(uSource, mpsug);
+	if (mpsug.ByteSize() > 0) {
+		sendMessage(uSource, mpsug);
+	}
 
 	log(uSource, "Authenticated");
 
@@ -484,37 +491,14 @@ void Server::msgUserState(ServerUser *uSource, MumbleProto::UserState &msg) {
 			if (!c || (c == pDstServerUser->cChannel))
 				return;
 
-			// team9000
-			if(uSource != pDstServerUser) {
-				if(
-					!hasPermission(uSource, pDstServerUser->cChannel, ChanACL::Move)
-					|| !hasPermission(uSource, c, ChanACL::Move)
-				) {
-					PERM_DENIED(uSource, pDstServerUser->cChannel, ChanACL::Move);
-					return;
-				}
-			} else {
-				if(!hasPermission(pDstServerUser, c, ChanACL::Enter)) {
-					PERM_DENIED(pDstServerUser, c, ChanACL::Enter);
-					return;
-				}
-			}
-
 			if (iMaxUsersPerChannel && (c->qlUsers.count() >= iMaxUsersPerChannel)) {
-				PERM_DENIED_FALLBACK(ChannelFull, 0x010201, QLatin1String("Channel is full."));
+				PERM_DENIED_FALLBACK(ChannelFull, 0x010201, QLatin1String("Channel is full"));
 				return;
 			}
 		}
-
 		if (msg.has_mute() || msg.has_deaf() || msg.has_suppress() || msg.has_priority_speaker()) {
-			if (pDstServerUser->iId == 0) {
-				PERM_DENIED_TYPE(SuperUser);
-				return;
-			}
-			if (! hasPermission(uSource, pDstServerUser->cChannel, ChanACL::MuteDeafen) || msg.suppress()) {
-				PERM_DENIED(uSource, pDstServerUser->cChannel, ChanACL::MuteDeafen);
-				return;
-			}
+			// nobody has access to this
+			PERM_DENIED_TYPE(SuperUser);
 		}
 
 		if (msg.has_comment()) {
@@ -1224,8 +1208,6 @@ void Server::msgUserStats(ServerUser*uSource, MumbleProto::UserStats &msg) {
 	const CryptState &cs = pDstServerUser->csCrypt;
 	const BandwidthRecord &bwr = pDstServerUser->bwr;
 	const QList<QSslCertificate> &certs = pDstServerUser->peerCertificateChain();
-	MumbleProto::UserStats_Stats *mpusss;
-	MumbleProto::Version *mpv;
 
 	bool extend = (uSource == pDstServerUser) || hasPermission(uSource, qhChannels.value(0), ChanACL::Register);
 
@@ -1252,6 +1234,8 @@ void Server::msgUserStats(ServerUser*uSource, MumbleProto::UserStats &msg) {
 	}
 
 	if (local) {
+		MumbleProto::UserStats_Stats *mpusss;
+
 		mpusss = msg.mutable_from_client();
 		mpusss->set_good(cs.uiGood);
 		mpusss->set_late(cs.uiLate);
@@ -1273,6 +1257,8 @@ void Server::msgUserStats(ServerUser*uSource, MumbleProto::UserStats &msg) {
 	msg.set_tcp_ping_var(pDstServerUser->dTCPPingVar);
 
 	if (details) {
+		MumbleProto::Version *mpv;
+
 		mpv = msg.mutable_version();
 		if (pDstServerUser->uiVersion)
 			mpv->set_version(pDstServerUser->uiVersion);

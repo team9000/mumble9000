@@ -113,7 +113,7 @@ ServerView::~ServerView() {
 	delete siPublic;
 }
 
-QMimeData *ServerView::mimeData(const QList<QTreeWidgetItem *> mimeitems) const {
+QMimeData *ServerView::mimeData(const QList<QTreeWidgetItem *>& mimeitems) const {
 	if (mimeitems.isEmpty())
 		return NULL;
 
@@ -506,7 +506,7 @@ void ServerItem::hideCheck() {
 
 	if (! bParent && (itType == PublicType)) {
 		if (g.s.ssFilter == Settings::ShowReachable)
-			hide = (uiPing == 0);
+			hide = (dPing == 0.0);
 		else if (g.s.ssFilter == Settings::ShowPopulated)
 			hide = (uiUsers == 0);
 	}
@@ -1111,7 +1111,7 @@ void ConnectDialog::on_qtwServers_currentItemChanged(QTreeWidgetItem *item, QTre
 		qpbEdit->setEnabled(false);
 	}
 	
-	bool bOk = (si && ! si->qlAddresses.isEmpty());
+	bool bOk = !si->qlAddresses.isEmpty();
 	qdbbButtonBox->button(QDialogButtonBox::Ok)->setEnabled(bOk);
 
 	bLastFound = true;
