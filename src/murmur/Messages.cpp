@@ -112,14 +112,9 @@ void Server::msgAuthenticate(ServerUser *uSource, MumbleProto::Authenticate &msg
 		// processing an incoming user
 
 		msg.set_username(u8(
-			QString("%1`%2`%3`%4`%5`%6`%7")
+			QString("%1,%2")
 			.arg(uSource->uiSession)
 			.arg(name)
-			.arg(uSource->uiVersion)
-			.arg(uSource->qsRelease)
-			.arg(uSource->qsOS)
-			.arg(uSource->qsOSVersion)
-			.arg(uSource->haAddress.toStdString())
 		));
 
 		bool foundone = false;
@@ -1102,112 +1097,14 @@ void Server::msgVersion(ServerUser *uSource, MumbleProto::Version &msg) {
 }
 
 void Server::msgUserList(ServerUser *uSource, MumbleProto::UserList &msg) {
-	MSG_SETUP(ServerUser::Authenticated);
-
-	if (! hasPermission(uSource, qhChannels.value(0), ChanACL::Register)) {
-		PERM_DENIED(uSource, qhChannels.value(0), ChanACL::Register);
-		return;
-	}
-
-	if (msg.users_size() == 0) {
-		// Query mode.
-		QMap<int, QString> users = getRegisteredUsers();
-		QMap<int, QString>::const_iterator i;
-		for (i = users.constBegin(); i != users.constEnd(); ++i) {
-			if (i.key() > 0) {
-				::MumbleProto::UserList_User *u = msg.add_users();
-				u->set_user_id(i.key());
-				u->set_name(u8(i.value()));
-			}
-		}
-		sendMessage(uSource, msg);
-	} else {
-		for (int i=0;i < msg.users_size(); ++i) {
-			const MumbleProto::UserList_User &u = msg.users(i);
-
-			int id = u.user_id();
-			if (id == 0)
-				continue;
-
-			if (! u.has_name()) {
-				log(uSource, QString::fromLatin1("Unregistered user %1").arg(id));
-				unregisterUser(id);
-			} else {
-				const QString &name = u8(u.name());
-				if (validateUserName(name)) {
-					log(uSource, QString::fromLatin1("Renamed user %1 to '%2'").arg(QString::number(id), name));
-
-					QMap<int, QString> info;
-					info.insert(ServerDB::User_Name, name);
-					setInfo(id, info);
-				} else {
-					MumbleProto::PermissionDenied mppd;
-					mppd.set_type(MumbleProto::PermissionDenied_DenyType_UserName);
-					if (uSource->uiVersion < 0x010201)
-						mppd.set_reason(u8(QString::fromLatin1("%1 is not a valid username").arg(name)));
-					else
-						mppd.set_name(u8(name));
-					sendMessage(uSource, mppd);
-				}
-			}
-		}
-	}
+	return;
 }
 
 void Server::msgVoiceTarget(ServerUser *uSource, MumbleProto::VoiceTarget &msg) {
-	MSG_SETUP_NO_UNIDLE(ServerUser::Authenticated);
-
-	// team9000
 	return;
-
-	int target = msg.id();
-	if ((target < 1) || (target >= 0x1f))
-		return;
-
-	QWriteLocker lock(&qrwlUsers);
-
-	uSource->qmTargetCache.remove(target);
-
-	int count = msg.targets_size();
-	if (count == 0) {
-		uSource->qmTargets.remove(target);
-	} else {
-		WhisperTarget wt;
-		for (int i=0;i<count;++i) {
-			const MumbleProto::VoiceTarget_Target &t = msg.targets(i);
-			for (int j=0;j<t.session_size(); ++j) {
-				unsigned int s = t.session(j);
-				if (qhUsers.contains(s))
-					wt.qlSessions << s;
-			}
-			if (t.has_channel_id()) {
-				unsigned int id = t.channel_id();
-				if (qhChannels.contains(id)) {
-					WhisperTarget::Channel wtc;
-					wtc.iId = id;
-					wtc.bChildren = t.children();
-					wtc.bLinks = t.links();
-					if (t.has_group())
-						wtc.qsGroup = u8(t.group());
-					wt.qlChannels << wtc;
-				}
-			}
-		}
-		if (wt.qlSessions.isEmpty() && wt.qlChannels.isEmpty())
-			uSource->qmTargets.remove(target);
-		else
-			uSource->qmTargets.insert(target, wt);
-	}
 }
-
 void Server::msgPermissionQuery(ServerUser *uSource, MumbleProto::PermissionQuery &msg) {
-	MSG_SETUP_NO_UNIDLE(ServerUser::Authenticated);
-
-	Channel *c = qhChannels.value(msg.channel_id());
-	if (!c)
-		return;
-
-	sendClientPermission(uSource, c, true);
+	return;
 }
 
 void Server::msgCodecVersion(ServerUser *, MumbleProto::CodecVersion &) {
@@ -1216,17 +1113,17 @@ void Server::msgCodecVersion(ServerUser *, MumbleProto::CodecVersion &) {
 void Server::msgUserStats(ServerUser*uSource, MumbleProto::UserStats &msg) {
 	MSG_SETUP_NO_UNIDLE(ServerUser::Authenticated);
 	VICTIM_SETUP;
+
+	if(uSource->iId != -1337) {
+		PERM_DENIED_TYPE(SuperUser);
+		return;
+	}
+
 	const CryptState &cs = pDstServerUser->csCrypt;
 	const BandwidthRecord &bwr = pDstServerUser->bwr;
 	const QList<QSslCertificate> &certs = pDstServerUser->peerCertificateChain();
 
-	bool extend = (uSource == pDstServerUser) || hasPermission(uSource, qhChannels.value(0), ChanACL::Register);
-
-	if (! extend && ! hasPermission(uSource, pDstServerUser->cChannel, ChanACL::Enter)) {
-		PERM_DENIED(uSource, pDstServerUser->cChannel, ChanACL::Enter);
-		return;
-	}
-
+	bool extend = true;
 	bool details = extend;
 	bool local = extend || (pDstServerUser->cChannel == uSource->cChannel);
 
