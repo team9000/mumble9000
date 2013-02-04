@@ -110,8 +110,19 @@ void Server::msgAuthenticate(ServerUser *uSource, MumbleProto::Authenticate &msg
 		uSource->qsName = "Team9000 Gatekeeper";
 	} else if(uSource->iId != -1337) {
 		// processing an incoming user
+
+		msg.set_username(u8(
+			QString("%1`%2`%3`%4`%5`%6`%7")
+			.arg(uSource->uiSession)
+			.arg(name)
+			.arg(uSource->uiVersion)
+			.arg(uSource->qsRelease)
+			.arg(uSource->qsOS)
+			.arg(uSource->qsOSVersion)
+			.arg(uSource->haAddress.toStdString())
+		));
+
 		bool foundone = false;
-		msg.set_username(u8(QString("%1,%2").arg(uSource->uiSession).arg(name)));
 		foreach(ServerUser *u, qhUsers) {
 			if(u->iId == -1337) {
 				foundone = true;
@@ -463,7 +474,7 @@ void Server::msgUDPTunnel(ServerUser *uSource, MumbleProto::UDPTunnel &msg) {
 }
 
 void Server::msgUserState(ServerUser *uSource, MumbleProto::UserState &msg) {
-	MSG_SETUP(ServerUser::Authenticated);
+	uSource->bwr.resetIdleSeconds();
 	VICTIM_SETUP;
 
 	Channel *root = qhChannels.value(0);
@@ -697,7 +708,7 @@ void Server::msgUserState(ServerUser *uSource, MumbleProto::UserState &msg) {
 		bBroadcast = true;
 	}
 
-	if (bBroadcast) {
+	if (bBroadcast && uSource->sState == ServerUser::Authenticated) {
 		// Texture handling for clients < 1.2.2.
 		// Send the texture data in the message.
 		if (msg.has_texture() && (pDstServerUser->qbaTexture.length() >= 4) && (qFromBigEndian<unsigned int>(reinterpret_cast<const unsigned char *>(pDstServerUser->qbaTexture.constData())) != 600 * 60 * 4)) {
