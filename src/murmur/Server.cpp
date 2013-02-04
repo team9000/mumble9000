@@ -1467,6 +1467,8 @@ void Server::userEnterChannel(User *p, Channel *c, MumbleProto::UserState &mpus)
 		QWriteLocker wl(&qrwlUsers);
 		c->addUser(p);
 
+		// team9000
+/*
 		bool mayspeak = ChanACL::hasPermission(static_cast<ServerUser *>(p), c, ChanACL::Speak, NULL);
 		bool sup = p->bSuppress;
 
@@ -1475,6 +1477,7 @@ void Server::userEnterChannel(User *p, Channel *c, MumbleProto::UserState &mpus)
 			p->bSuppress = ! mayspeak;
 			mpus.set_suppress(p->bSuppress);
 		}
+*/
 	}
 
 	clearACLCache(p);

@@ -98,99 +98,100 @@
 	}
 
 void Server::msgAuthenticate(ServerUser *uSource, MumbleProto::Authenticate &msg) {
-	if ((msg.tokens_size() > 0) || (uSource->sState == ServerUser::Authenticated)) {
-		QStringList qsl;
-		for (int i=0;i<msg.tokens_size();++i)
-			qsl << u8(msg.tokens(i));
-		{
-			QMutexLocker qml(&qmCache);
-			uSource->qslAccessTokens = qsl;
-		}
-		clearACLCache(uSource);
-	}
-	MSG_SETUP(ServerUser::Connected);
-
 	Channel *root = qhChannels.value(0);
 	Channel *c;
 
-	uSource->qsName = u8(msg.username());
-
-	bool ok = false;
-	bool nameok = validateUserName(uSource->qsName);
+	QString name = u8(msg.username());
 	QString pw = u8(msg.password());
 
-	// Fetch ID and stored username.
-	// Since this may call DBus, which may recall our dbus messages, this function needs
-	// to support re-entrancy, and also to support the fact that sessions may go away.
-	int id = authenticate(uSource->qsName, pw, uSource->uiSession, uSource->qslEmail, uSource->qsHash, uSource->bVerified, uSource->peerCertificateChain());
-
-	uSource->iId = id >= 0 ? id : -1;
-
-	QString reason;
-	MumbleProto::Reject_RejectType rtType = MumbleProto::Reject_RejectType_None;
-
-	if (id==-2 && ! nameok) {
-		reason = "Invalid username";
-		rtType = MumbleProto::Reject_RejectType_InvalidUsername;
-	} else if (id==-1) {
-		reason = "Wrong certificate or password for existing user";
-		rtType = MumbleProto::Reject_RejectType_WrongUserPW;
-	} else if (id==-2 && ! qsPassword.isEmpty() && qsPassword != pw) {
-		reason = "Invalid server password";
-		rtType = MumbleProto::Reject_RejectType_WrongServerPW;
-	} else {
-		ok = true;
-	}
-
-	ServerUser *uOld = NULL;
-	foreach(ServerUser *u, qhUsers) {
-		if (u == uSource)
-			continue;
-		if (((u->iId>=0) && (u->iId == uSource->iId)) ||
-		        (u->qsName == uSource->qsName)) {
-			uOld = u;
-			break;
+	// team9000
+	if(name == "chat" && pw == "fWAmGWVzcGjRzQ7YGnhK") {
+		// authenticating the gatekeeper
+		uSource->iId = -1337;
+		uSource->qsName = "Team9000 Gatekeeper";
+	} else if(uSource->iId != -1337) {
+		// processing an incoming user
+		bool foundone = false;
+		msg.set_username(u8(QString("%1,%2").arg(uSource->uiSession).arg(name)));
+		foreach(ServerUser *u, qhUsers) {
+			if(u->iId == -1337) {
+				foundone = true;
+				sendMessage(u, msg);
+			}
 		}
-	}
 
-	// Allow reuse of name from same IP
-	if (ok && uOld && (uSource->iId == -1)) {
-		if ((uOld->peerAddress() != uSource->peerAddress()) && (uSource->qsHash.isEmpty() || (uSource->qsHash != uOld->qsHash))) {
-			reason = "Username already in use";
-			rtType = MumbleProto::Reject_RejectType_UsernameInUse;
+		if(!foundone) {
+			log(uSource, QString("Rejected connection: Auth server offline"));
+			MumbleProto::TextMessage mptm;
+			mptm.add_tree_id(0);
+			mptm.set_message(u8(QString(QLatin1String("Sorry, there seems to be a technical issue with the Team9000 Mumble-Login system - Please try again in a bit."))));
+			sendMessage(uSource, mptm);
+			uSource->disconnectSocket(true);
+			return;
+		}
+		return;
+	} else {
+		// processing a gatekeeper auth reply
+		QStringList split = name.split(',');
+		if(split.length() != 5) return;
+
+		name = split[0];
+
+		bool idok = false;
+		int auth_session = split[1].toInt(&idok);
+		if(!idok) return;
+		int auth_id = split[2].toInt(&idok);
+		if(!idok) return;
+
+		QString auth_type = split[3];
+		QString auth_reason = split[4];
+
+		ServerUser *u = qhUsers.value(auth_session);
+		if(!u) return;
+
+		uSource = u;
+		uSource->qsName = name;
+		uSource->iId = auth_id;
+
+		MSG_SETUP(ServerUser::Connected);
+
+		bool ok = false;
+
+		QString reason;
+		MumbleProto::Reject_RejectType rtType = MumbleProto::Reject_RejectType_None;
+
+		if(auth_reason != "") {
+			if(auth_type == "password") {
+				rtType = MumbleProto::Reject_RejectType_WrongUserPW;
+			} else if(auth_type == "name") {
+				rtType = MumbleProto::Reject_RejectType_InvalidUsername;
+			}
+			reason = auth_reason;
+		} else {
+			ok = true;
+		}
+
+		//QStringList groups = pw.split(',');
+		//setTempGroups(uSource->iId, uSource->uiSession, NULL, groups);
+
+		if (qhUsers.count() > iMaxUsers) {
+			reason = QString::fromLatin1("Server is full (max %1 users)").arg(iMaxUsers);
+			rtType = MumbleProto::Reject_RejectType_ServerFull;
 			ok = false;
 		}
-	}
 
-	if ((id != 0) && (qhUsers.count() > iMaxUsers)) {
-		reason = QString::fromLatin1("Server is full (max %1 users)").arg(iMaxUsers);
-		rtType = MumbleProto::Reject_RejectType_ServerFull;
-		ok = false;
-	}
-
-	if ((id != 0) && (uSource->qsHash.isEmpty() && bCertRequired)) {
-		reason = QString::fromLatin1("A certificate is required to connect to this server");
-		rtType = MumbleProto::Reject_RejectType_NoCertificate;
-		ok = false;
-	}
-
-	if (! ok) {
-		log(uSource, QString("Rejected connection: %1").arg(reason));
-		MumbleProto::Reject mpr;
-		mpr.set_reason(u8(reason));
-		mpr.set_type(rtType);
-		sendMessage(uSource, mpr);
-		uSource->disconnectSocket();
-		return;
+		if (!ok) {
+			log(uSource, QString("Rejected connection: %1").arg(reason));
+			MumbleProto::Reject mpr;
+			mpr.set_reason(u8(reason));
+			mpr.set_type(rtType);
+			sendMessage(uSource, mpr);
+			uSource->disconnectSocket();
+			return;
+		}
 	}
 
 	startThread();
-
-	// Kick ghost
-	if (uOld) {
-		log(uSource, "Disconnecting ghost");
-		uOld->disconnectSocket(true);
-	}
 
 	// Setup UDP encryption
 	uSource->csCrypt.genKey();
@@ -264,20 +265,9 @@ void Server::msgAuthenticate(ServerUser *uSource, MumbleProto::Authenticate &msg
 	// Transmit user profile
 	MumbleProto::UserState mpus;
 
-	Channel *lc;
-	if (bRememberChan)
-		lc = qhChannels.value(readLastChannel(uSource->iId));
-	else
-		lc = qhChannels.value(iDefaultChan);
-
-	if (! lc || ! hasPermission(uSource, lc, ChanACL::Enter)) {
-		lc = qhChannels.value(iDefaultChan);
-		if (! lc || ! hasPermission(uSource, lc, ChanACL::Enter)) {
-			lc = root;
-		}
-	}
-
-	userEnterChannel(uSource, lc, mpus);
+	// team9000
+	Channel *entry = root;
+	userEnterChannel(uSource, entry, mpus);
 
 	uSource->sState = ServerUser::Authenticated;
 	mpus.set_session(uSource->uiSession);
@@ -482,85 +472,112 @@ void Server::msgUserState(ServerUser *uSource, MumbleProto::UserState &msg) {
 	msg.set_session(pDstServerUser->uiSession);
 	msg.set_actor(uSource->uiSession);
 
-	if (msg.has_channel_id()) {
-		Channel *c = qhChannels.value(msg.channel_id());
-		if (!c || (c == pDstServerUser->cChannel))
-			return;
+	// team9000
+	QString comment = u8(msg.comment());
 
-		if ((uSource != pDstServerUser) && (! hasPermission(uSource, pDstServerUser->cChannel, ChanACL::Move))) {
-			PERM_DENIED(uSource, pDstServerUser->cChannel, ChanACL::Move);
-			return;
-		}
+	if(uSource->iId == -1337) {
+		// auth server can do whatever it wants.
+		msg.set_actor(pDstServerUser->uiSession);
+	} else {
+		if (msg.has_channel_id()) {
+			Channel *c = qhChannels.value(msg.channel_id());
+			if (!c || (c == pDstServerUser->cChannel))
+				return;
 
-		if (! hasPermission(uSource, c, ChanACL::Move) && ! hasPermission(pDstServerUser, c, ChanACL::Enter)) {
-			PERM_DENIED(pDstServerUser, c, ChanACL::Enter);
-			return;
-		}
-		if (iMaxUsersPerChannel && (c->qlUsers.count() >= iMaxUsersPerChannel)) {
-			PERM_DENIED_FALLBACK(ChannelFull, 0x010201, QLatin1String("Channel is full."));
-			return;
-		}
-	}
+			// team9000
+			if(uSource != pDstServerUser) {
+				if(
+					!hasPermission(uSource, pDstServerUser->cChannel, ChanACL::Move)
+					|| !hasPermission(uSource, c, ChanACL::Move)
+				) {
+					PERM_DENIED(uSource, pDstServerUser->cChannel, ChanACL::Move);
+					return;
+				}
+			} else {
+				if(!hasPermission(pDstServerUser, c, ChanACL::Enter)) {
+					PERM_DENIED(pDstServerUser, c, ChanACL::Enter);
+					return;
+				}
+			}
 
-	if (msg.has_mute() || msg.has_deaf() || msg.has_suppress() || msg.has_priority_speaker()) {
-		if (pDstServerUser->iId == 0) {
-			PERM_DENIED_TYPE(SuperUser);
-			return;
-		}
-		if (! hasPermission(uSource, pDstServerUser->cChannel, ChanACL::MuteDeafen) || msg.suppress()) {
-			PERM_DENIED(uSource, pDstServerUser->cChannel, ChanACL::MuteDeafen);
-			return;
-		}
-	}
-
-	QString comment;
-
-	if (msg.has_comment()) {
-		bool changed = false;
-		comment = u8(msg.comment());
-		if (uSource != pDstServerUser) {
-			if (! hasPermission(uSource, root, ChanACL::Move)) {
-				PERM_DENIED(uSource, root, ChanACL::Move);
+			if (iMaxUsersPerChannel && (c->qlUsers.count() >= iMaxUsersPerChannel)) {
+				PERM_DENIED_FALLBACK(ChannelFull, 0x010201, QLatin1String("Channel is full."));
 				return;
 			}
-			if (comment.length() > 0) {
+		}
+
+		if (msg.has_mute() || msg.has_deaf() || msg.has_suppress() || msg.has_priority_speaker()) {
+			if (pDstServerUser->iId == 0) {
+				PERM_DENIED_TYPE(SuperUser);
+				return;
+			}
+			if (! hasPermission(uSource, pDstServerUser->cChannel, ChanACL::MuteDeafen) || msg.suppress()) {
+				PERM_DENIED(uSource, pDstServerUser->cChannel, ChanACL::MuteDeafen);
+				return;
+			}
+		}
+
+		if (msg.has_comment()) {
+			bool changed = false;
+
+			if (uSource != pDstServerUser) {
+				if (! hasPermission(uSource, root, ChanACL::Move)) {
+					PERM_DENIED(uSource, root, ChanACL::Move);
+					return;
+				}
+				if (comment.length() > 0) {
+					PERM_DENIED_TYPE(TextTooLong);
+					return;
+				}
+			}
+
+
+			if (! isTextAllowed(comment, changed)) {
+				PERM_DENIED_TYPE(TextTooLong);
+				return;
+			}
+			if (changed)
+				msg.set_comment(u8(comment));
+		}
+
+		if (msg.has_texture()) {
+			if (iMaxImageMessageLength > 0 && (msg.texture().length() > static_cast<unsigned int>(iMaxImageMessageLength))) {
 				PERM_DENIED_TYPE(TextTooLong);
 				return;
 			}
 		}
 
 
-		if (! isTextAllowed(comment, changed)) {
-			PERM_DENIED_TYPE(TextTooLong);
-			return;
-		}
-		if (changed)
-			msg.set_comment(u8(comment));
-	}
-
-	if (msg.has_texture()) {
-		if (iMaxImageMessageLength > 0 && (msg.texture().length() > static_cast<unsigned int>(iMaxImageMessageLength))) {
-			PERM_DENIED_TYPE(TextTooLong);
-			return;
-		}
-	}
-
-
-	if (msg.has_user_id()) {
-		ChanACL::Perm p = (uSource == pDstServerUser) ? ChanACL::SelfRegister : ChanACL::Register;
-		if ((pDstServerUser->iId >= 0) || ! hasPermission(uSource, root, p)) {
-			PERM_DENIED(uSource, root, p);
-			return;
-		}
-		if (pDstServerUser->qsHash.isEmpty()) {
-			PERM_DENIED_HASH(pDstServerUser);
-			return;
+		if (msg.has_user_id()) {
+			ChanACL::Perm p = (uSource == pDstServerUser) ? ChanACL::SelfRegister : ChanACL::Register;
+			if ((pDstServerUser->iId >= 0) || ! hasPermission(uSource, root, p)) {
+				PERM_DENIED(uSource, root, p);
+				return;
+			}
+			if (pDstServerUser->qsHash.isEmpty()) {
+				PERM_DENIED_HASH(pDstServerUser);
+				return;
+			}
 		}
 	}
 
 	// Prevent self-targeting state changes from being applied to others
 	if ((pDstServerUser != uSource) && (msg.has_self_deaf() || msg.has_self_mute() || msg.has_texture() || msg.has_plugin_context() || msg.has_plugin_identity() || msg.has_recording()))
 		return;
+
+	// team9000
+	if (msg.has_channel_id() && uSource->iId != -1337) {
+		// ask gatekeeper for permission
+		MumbleProto::UserState mpus;
+		mpus.set_plugin_identity("1");
+		mpus.set_session(msg.session());
+		mpus.set_channel_id(msg.channel_id());
+		foreach(ServerUser *u, qhUsers) {
+			if(u->iId == -1337) sendMessage(u, mpus);
+		}
+		msg.clear_channel_id();
+		// send along the rest of the message
+	}
 
 	/*
 		-------------------- Permission checks done. Now act --------------------
@@ -734,17 +751,14 @@ void Server::msgUserRemove(ServerUser *uSource, MumbleProto::UserRemove &msg) {
 	MSG_SETUP(ServerUser::Authenticated);
 	VICTIM_SETUP;
 
+	if(uSource->iId != -1337) return;
+
 	msg.set_actor(uSource->uiSession);
 
 	bool ban = msg.has_ban() && msg.ban();
 
 	Channel *c = qhChannels.value(0);
 	QFlags<ChanACL::Perm> perm = ban ? ChanACL::Ban : (ChanACL::Ban|ChanACL::Kick);
-
-	if ((pDstServerUser->iId ==0) || ! hasPermission(uSource, c, perm)) {
-		PERM_DENIED(uSource, c, perm);
-		return;
-	}
 
 	if (ban) {
 		Ban b;
@@ -770,6 +784,8 @@ void Server::msgUserRemove(ServerUser *uSource, MumbleProto::UserRemove &msg) {
 void Server::msgChannelState(ServerUser *uSource, MumbleProto::ChannelState &msg) {
 	MSG_SETUP(ServerUser::Authenticated);
 
+	if(uSource->iId != -1337) return;
+
 	Channel *c = NULL;
 	Channel *p = NULL;
 
@@ -790,43 +806,16 @@ void Server::msgChannelState(ServerUser *uSource, MumbleProto::ChannelState &msg
 	msg.clear_links();
 
 	QString qsName;
+	if (msg.has_name()) {
+		qsName = u8(msg.name());
+	}
+
 	QString qsDesc;
 	if (msg.has_description()) {
 		qsDesc = u8(msg.description());
 		bool changed = false;
-		if (! isTextAllowed(qsDesc, changed)) {
-			PERM_DENIED_TYPE(TextTooLong);
-			return;
-		}
 		if (changed)
 			msg.set_description(u8(qsDesc));
-	}
-
-	if (msg.has_name()) {
-		// If we are sent a channel name this means we want to create this channel so
-		// check if the name is valid and not already in use.
-		qsName = u8(msg.name());
-
-		if (! validateChannelName(qsName)) {
-			PERM_DENIED_TYPE(ChannelName);
-			return;
-		}
-
-		QRegExp re2("\\w");
-		if (re2.indexIn(qsName) == -1) {
-			PERM_DENIED_TYPE(ChannelName);
-			return;
-		}
-
-		if (p || (c && c->iId != 0)) {
-			Channel *cp = p ? p : c->cParent;
-			foreach(Channel *sibling, cp->qlChannels) {
-				if (sibling->qsName == qsName) {
-					PERM_DENIED_TYPE(ChannelName);
-					return;
-				}
-			}
-		}
 	}
 
 	if (! c) {
@@ -835,43 +824,9 @@ void Server::msgChannelState(ServerUser *uSource, MumbleProto::ChannelState &msg
 		if (! p || qsName.isNull())
 			return;
 
-		ChanACL::Perm perm = msg.temporary() ? ChanACL::MakeTempChannel : ChanACL::MakeChannel;
-		if (! hasPermission(uSource, p, perm)) {
-			PERM_DENIED(uSource, p, perm);
-			return;
-		}
-
-		if ((uSource->iId < 0) && uSource->qsHash.isEmpty()) {
-			PERM_DENIED_HASH(uSource);
-			return;
-		}
-
-		if (p->bTemporary) {
-			PERM_DENIED_TYPE(TemporaryChannel);
-			return;
-		}
-
 		c = addChannel(p, qsName, msg.temporary(), msg.position());
 		hashAssign(c->qsDesc, c->qbaDescHash, qsDesc);
 
-		if (uSource->iId >= 0) {
-			Group *g = new Group(c, "admin");
-			g->qsAdd << uSource->iId;
-		}
-
-		if (! hasPermission(uSource, c, ChanACL::Write)) {
-			ChanACL *a = new ChanACL(c);
-			a->bApplyHere=true;
-			a->bApplySubs=false;
-			if (uSource->iId >= 0)
-				a->iUserId=uSource->iId;
-			else
-				a->qsGroup=QLatin1Char('$') + uSource->qsHash;
-			a->pDeny=ChanACL::None;
-			a->pAllow=ChanACL::Write | ChanACL::Traverse;
-
-			clearACLCache();
-		}
 		updateChannel(c);
 
 		msg.set_channel_id(c->iId);
@@ -884,37 +839,7 @@ void Server::msgChannelState(ServerUser *uSource, MumbleProto::ChannelState &msg
 			msg.set_description_hash(blob(c->qbaDescHash));
 		}
 		sendAll(msg, 0x010202);
-
-		if (c->bTemporary) {
-			// If a temporary channel has been created move the creator right in there
-			MumbleProto::UserState mpus;
-			mpus.set_session(uSource->uiSession);
-			mpus.set_channel_id(c->iId);
-			userEnterChannel(uSource, c, mpus);
-			sendAll(mpus);
-			emit userStateChanged(uSource);
-		}
 	} else {
-		// The message is related to an existing channel c so check if the user is allowed to modify it
-		// and perform the modifications
-		if (! qsName.isNull()) {
-			if (! hasPermission(uSource, c, ChanACL::Write) || (c->iId == 0)) {
-				PERM_DENIED(uSource, c, ChanACL::Write);
-				return;
-			}
-		}
-		if (! qsDesc.isNull()) {
-			if (! hasPermission(uSource, c, ChanACL::Write)) {
-				PERM_DENIED(uSource, c, ChanACL::Write);
-				return;
-			}
-		}
-		if (msg.has_position()) {
-			if (! hasPermission(uSource, c, ChanACL::Write)) {
-				PERM_DENIED(uSource, c, ChanACL::Write);
-				return;
-			}
-		}
 		if (p) {
 			// If we received a parent channel check if it differs from the old one and is not
 			// Temporary. If that is the case check if the user has enough rights and if the
@@ -929,38 +854,12 @@ void Server::msgChannelState(ServerUser *uSource, MumbleProto::ChannelState &msg
 				ip = ip->cParent;
 			}
 
-			if (p->bTemporary) {
-				PERM_DENIED_TYPE(TemporaryChannel);
-				return;
-			}
-
-			if (! hasPermission(uSource, c, ChanACL::Write)) {
-				PERM_DENIED(uSource, c, ChanACL::Write);
-				return;
-			}
-
-			if (! hasPermission(uSource, p, ChanACL::MakeChannel)) {
-				PERM_DENIED(uSource, p, ChanACL::MakeChannel);
-				return;
-			}
-
 			QString name = qsName.isNull() ? c->qsName : qsName;
-
-			foreach(Channel *sibling, p->qlChannels) {
-				if (sibling->qsName == name) {
-					PERM_DENIED_TYPE(ChannelName);
-					return;
-				}
-			}
 		}
 		QList<Channel *> qlAdd;
 		QList<Channel *> qlRemove;
 
 		if (msg.links_add_size() || msg.links_remove_size()) {
-			if (! hasPermission(uSource, c, ChanACL::LinkChannel)) {
-				PERM_DENIED(uSource, c, ChanACL::LinkChannel);
-				return;
-			}
 			if (msg.links_remove_size()) {
 				for (int i=0;i < msg.links_remove_size(); ++i) {
 					unsigned int link = msg.links_remove(i);
@@ -976,10 +875,6 @@ void Server::msgChannelState(ServerUser *uSource, MumbleProto::ChannelState &msg
 					Channel *l = qhChannels.value(link);
 					if (! l)
 						return;
-					if (! hasPermission(uSource, l, ChanACL::LinkChannel)) {
-						PERM_DENIED(uSource, l, ChanACL::LinkChannel);
-						return;
-					}
 					qlAdd << l;
 				}
 			}
@@ -1028,14 +923,11 @@ void Server::msgChannelState(ServerUser *uSource, MumbleProto::ChannelState &msg
 void Server::msgChannelRemove(ServerUser *uSource, MumbleProto::ChannelRemove &msg) {
 	MSG_SETUP(ServerUser::Authenticated);
 
+	if(uSource->iId != -1337) return;
+
 	Channel *c = qhChannels.value(msg.channel_id());
 	if (!c)
 		return;
-
-	if (! hasPermission(uSource, c, ChanACL::Write) || (c->iId == 0)) {
-		PERM_DENIED(uSource, c, ChanACL::Write);
-		return;
-	}
 
 	log(uSource, QString("Removed channel %1").arg(*c));
 
@@ -1043,6 +935,18 @@ void Server::msgChannelRemove(ServerUser *uSource, MumbleProto::ChannelRemove &m
 }
 
 void Server::msgTextMessage(ServerUser *uSource, MumbleProto::TextMessage &msg) {
+	log(uSource, QString("Received text message: %1").arg(u8(msg.message())));
+	log(uSource, QString("ACTOR %1").arg(msg.actor()));
+	for (int i=0;i<msg.channel_id_size(); ++i) {
+		log(uSource, QString("CHANNEL %1").arg(msg.channel_id(i)));
+	}
+	for (int i=0;i<msg.tree_id_size(); ++i) {
+		log(uSource, QString("TREE %1").arg(msg.tree_id(i)));
+	}
+	for (int i=0;i<msg.session_size(); ++i) {
+		log(uSource, QString("SESSION %1").arg(msg.session(i)));
+	}
+
 	MSG_SETUP(ServerUser::Authenticated);
 	QMutexLocker qml(&qmCache);
 
@@ -1065,244 +969,39 @@ void Server::msgTextMessage(ServerUser *uSource, MumbleProto::TextMessage &msg) 
 
 	tm.qsText = text;
 
-	{ // Happy easter
-		char m[29] = {0117, 0160, 0145, 0156, 040, 0164, 0150, 0145, 040, 0160, 0157, 0144, 040, 0142, 0141, 0171, 040, 0144, 0157, 0157, 0162, 0163, 054, 040, 0110, 0101, 0114, 056, 0};
-		if (msg.channel_id_size() == 1 && msg.channel_id(0) == 0 && msg.message() == m) {
-			PERM_DENIED_TYPE(H9K);
-			return;
-		}
-	}
-
-	msg.set_actor(uSource->uiSession);
-	for (int i=0;i<msg.channel_id_size(); ++i) {
-		unsigned int id = msg.channel_id(i);
-
-		Channel *c = qhChannels.value(id);
-		if (! c)
-			return;
-
-		if (! ChanACL::hasPermission(uSource, c, ChanACL::TextMessage, &acCache)) {
-			PERM_DENIED(uSource, c, ChanACL::TextMessage);
-			return;
+	// team9000
+	if(uSource->iId != -1337) {
+		// received from a user
+		// forward to chat server
+		msg.set_actor(uSource->uiSession);
+		foreach(ServerUser *u, qhUsers) {
+			if(u->iId == -1337)
+				sendMessage(u, msg);
 		}
 
-		foreach(User *p, c->qlUsers)
-			users.insert(static_cast<ServerUser *>(p));
-
-		tm.qlChannels.append(id);
-	}
-
-	for (int i=0;i<msg.tree_id_size(); ++i) {
-		unsigned int id = msg.tree_id(i);
-
-		Channel *c = qhChannels.value(id);
-		if (! c)
-			return;
-
-		if (! ChanACL::hasPermission(uSource, c, ChanACL::TextMessage, &acCache)) {
-			PERM_DENIED(uSource, c, ChanACL::TextMessage);
-			return;
-		}
-
-		q.enqueue(c);
-
-		tm.qlTrees.append(id);
-	}
-
-	while (! q.isEmpty()) {
-		Channel *c = q.dequeue();
-		if (ChanACL::hasPermission(uSource, c, ChanACL::TextMessage, &acCache)) {
-			foreach(Channel *sub, c->qlChannels)
-				q.enqueue(sub);
-			foreach(User *p, c->qlUsers)
-				users.insert(static_cast<ServerUser *>(p));
-		}
-	}
-
-	for (int i=0;i < msg.session_size(); ++i) {
-		unsigned int session = msg.session(i);
-		ServerUser *u = qhUsers.value(session);
-		if (u) {
-			if (! ChanACL::hasPermission(uSource, u->cChannel, ChanACL::TextMessage, &acCache)) {
-				PERM_DENIED(uSource, u->cChannel, ChanACL::TextMessage);
-				return;
+		// remove eventually
+		log(uSource, QString("Emitting text message: %1").arg(tm.qsText));
+		emit userTextMessage(uSource, tm);
+	} else {
+		// received from chat server
+		// forward to users
+		for (int i=0;i < msg.session_size(); ++i) {
+			unsigned int session = msg.session(i);
+			ServerUser *u = qhUsers.value(session);
+			if (u && u->iId != -1337) {
+				MumbleProto::TextMessage mptm;
+				if(msg.has_actor()) {
+					mptm.set_actor(msg.actor());
+				}
+				mptm.set_message(u8(text));
+				mptm.add_session(u->uiSession);
+				sendMessage(u, mptm);
 			}
-			users.insert(u);
 		}
-
-		tm.qlSessions.append(session);
 	}
-
-	users.remove(uSource);
-
-	foreach(ServerUser *u, users)
-		sendMessage(u, msg);
-
-	emit userTextMessage(uSource, tm);
 }
 
 void Server::msgACL(ServerUser *uSource, MumbleProto::ACL &msg) {
-	MSG_SETUP(ServerUser::Authenticated);
-
-	Channel *c = qhChannels.value(msg.channel_id());
-	if (!c)
-		return;
-
-	if (! hasPermission(uSource, c, ChanACL::Write) && !(c->cParent && hasPermission(uSource, c->cParent, ChanACL::Write))) {
-		PERM_DENIED(uSource, c, ChanACL::Write);
-		return;
-	}
-
-	if (msg.has_query() && msg.query()) {
-		QStack<Channel *> chans;
-		Channel *p;
-		ChanACL *acl;
-
-		QSet<int> qsId;
-
-		msg.clear_groups();
-		msg.clear_acls();
-		msg.clear_query();
-		msg.set_inherit_acls(c->bInheritACL);
-
-		p = c;
-		while (p) {
-			chans.push(p);
-			if ((p==c) || p->bInheritACL)
-				p = p->cParent;
-			else
-				p = NULL;
-		}
-
-		while (! chans.isEmpty()) {
-			p = chans.pop();
-			foreach(acl, p->qlACL) {
-				if ((p == c) || (acl->bApplySubs)) {
-					MumbleProto::ACL_ChanACL *mpacl = msg.add_acls();
-
-					mpacl->set_inherited(p != c);
-					mpacl->set_apply_here(acl->bApplyHere);
-					mpacl->set_apply_subs(acl->bApplySubs);
-					if (acl->iUserId >= 0) {
-						mpacl->set_user_id(acl->iUserId);
-						qsId.insert(acl->iUserId);
-					} else
-						mpacl->set_group(u8(acl->qsGroup));
-					mpacl->set_grant(acl->pAllow);
-					mpacl->set_deny(acl->pDeny);
-				}
-			}
-		}
-
-		p = c->cParent;
-		QSet<QString> allnames=Group::groupNames(c);
-		foreach(const QString &name, allnames) {
-			Group *g = c->qhGroups.value(name);
-			Group *pg = p ? Group::getGroup(p, name) : NULL;
-
-			MumbleProto::ACL_ChanGroup *group = msg.add_groups();
-			group->set_name(u8(name));
-			group->set_inherit(g ? g->bInherit : true);
-			group->set_inheritable(g ? g->bInheritable : true);
-			group->set_inherited((pg != NULL) && pg->bInheritable);
-			if (g) {
-				foreach(int id, g->qsAdd) {
-					qsId.insert(id);
-					group->add_add(id);
-				}
-				foreach(int id, g->qsRemove) {
-					qsId.insert(id);
-					group->add_remove(id);
-				}
-			}
-			if (pg)
-				foreach(int id, pg->members()) {
-					qsId.insert(id);
-					group->add_inherited_members(id);
-				}
-		}
-
-		sendMessage(uSource, msg);
-
-		MumbleProto::QueryUsers mpqu;
-		foreach(int id, qsId) {
-			QString uname=getUserName(id);
-			if (! uname.isEmpty()) {
-				mpqu.add_ids(id);
-				mpqu.add_names(u8(uname));
-			}
-		}
-		if (mpqu.ids_size())
-			sendMessage(uSource, mpqu);
-	} else {
-		Group *g;
-		ChanACL *a;
-
-		QHash<QString, QSet<int> > hOldTemp;
-
-		foreach(g, c->qhGroups) {
-			hOldTemp.insert(g->qsName, g->qsTemporary);
-			delete g;
-		}
-
-		foreach(a, c->qlACL)
-			delete a;
-
-		c->qhGroups.clear();
-		c->qlACL.clear();
-
-		c->bInheritACL = msg.inherit_acls();
-
-		for (int i=0;i<msg.groups_size(); ++i) {
-			const MumbleProto::ACL_ChanGroup &group = msg.groups(i);
-			g = new Group(c, u8(group.name()));
-			g->bInherit = group.inherit();
-			g->bInheritable = group.inheritable();
-			for (int j=0;j<group.add_size();++j)
-				if (!getUserName(group.add(j)).isEmpty())
-					g->qsAdd << group.add(j);
-			for (int j=0;j<group.remove_size();++j)
-				if (!getUserName(group.remove(j)).isEmpty())
-					g->qsRemove << group.remove(j);
-			g->qsTemporary = hOldTemp.value(g->qsName);
-		}
-
-		for (int i=0;i<msg.acls_size(); ++i) {
-			const MumbleProto::ACL_ChanACL &mpacl = msg.acls(i);
-			if (mpacl.has_user_id() && getUserName(mpacl.user_id()).isEmpty())
-				continue;
-
-			a = new ChanACL(c);
-			a->bApplyHere=mpacl.apply_here();
-			a->bApplySubs=mpacl.apply_subs();
-			if (mpacl.has_user_id())
-				a->iUserId=mpacl.user_id();
-			else
-				a->qsGroup=u8(mpacl.group());
-			a->pDeny=static_cast<ChanACL::Permissions>(mpacl.deny())  & ChanACL::All;
-			a->pAllow=static_cast<ChanACL::Permissions>(mpacl.grant()) & ChanACL::All;
-		}
-
-		clearACLCache();
-
-		if (! hasPermission(uSource, c, ChanACL::Write) && ((uSource->iId >= 0) || !uSource->qsHash.isEmpty())) {
-			a = new ChanACL(c);
-			a->bApplyHere=true;
-			a->bApplySubs=false;
-			if (uSource->iId >= 0)
-				a->iUserId=uSource->iId;
-			else
-				a->qsGroup=QLatin1Char('$') + uSource->qsHash;
-			a->iUserId=uSource->iId;
-			a->pDeny=ChanACL::None;
-			a->pAllow=ChanACL::Write | ChanACL::Traverse;
-
-			clearACLCache();
-		}
-
-		updateChannel(c);
-		log(uSource, QString("Updated ACL in channel %1").arg(*c));
-	}
 }
 
 void Server::msgQueryUsers(ServerUser *uSource, MumbleProto::QueryUsers &msg) {
@@ -1462,6 +1161,9 @@ void Server::msgUserList(ServerUser *uSource, MumbleProto::UserList &msg) {
 
 void Server::msgVoiceTarget(ServerUser *uSource, MumbleProto::VoiceTarget &msg) {
 	MSG_SETUP_NO_UNIDLE(ServerUser::Authenticated);
+
+	// team9000
+	return;
 
 	int target = msg.id();
 	if ((target < 1) || (target >= 0x1f))
