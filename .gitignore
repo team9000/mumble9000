@@ -24,4 +24,3 @@ scripts/Murmur.ice
 scripts/murmur.ini.*
 src/murmur/Murmur.h
 src/murmur/Murmur.cpp
-winpaths_custom.pri

@@ -492,6 +492,20 @@ void Server::msgUserState(ServerUser *uSource, MumbleProto::UserState &msg) {
 		// auth server can do whatever it wants.
 		msg.set_actor(pDstServerUser->uiSession);
 	} else {
+		if(pDstServerUser != uSource) {
+			if(
+				msg.has_self_deaf()
+				|| msg.has_self_mute()
+				|| msg.has_texture()
+				|| msg.has_plugin_context()
+				|| msg.has_plugin_identity()
+				|| msg.has_recording()
+				|| msg.has_channel_id()
+			) {
+				// don't let users control other users
+				return;
+			}
+		}
 		if (msg.has_channel_id()) {
 			Channel *c = qhChannels.value(msg.channel_id());
 			if (!c || (c == pDstServerUser->cChannel))
@@ -550,10 +564,6 @@ void Server::msgUserState(ServerUser *uSource, MumbleProto::UserState &msg) {
 			}
 		}
 	}
-
-	// Prevent self-targeting state changes from being applied to others
-	if ((pDstServerUser != uSource) && (msg.has_self_deaf() || msg.has_self_mute() || msg.has_texture() || msg.has_plugin_context() || msg.has_plugin_identity() || msg.has_recording()))
-		return;
 
 	// team9000
 	if (msg.has_channel_id() && uSource->iId != -1337) {
