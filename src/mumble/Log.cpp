@@ -423,6 +423,9 @@ void Log::log(MsgType mt, const QString &console, const QString &terse, bool own
 	QString plain = QTextDocumentFragment::fromHtml(console).toPlainText();
 
 	quint32 flags = g.s.qmMessages.value(mt);
+	
+	if(mt == Log::TextMessage && console.startsWith(tr("To ")))
+		return;
 
 	// Message output on console
 	if ((flags & Settings::LogConsole)) {
@@ -451,7 +454,9 @@ void Log::log(MsgType mt, const QString &console, const QString &terse, bool own
 */
 			tc.insertBlock();
 //		}
-		tc.insertHtml(Log::msgColor(QString::fromLatin1("[%1] ").arg(dt.time().toString(Qt::DefaultLocaleShortDate)), Log::Time));
+
+		if(mt != Log::TextMessage)
+			tc.insertHtml(Log::msgColor(QString::fromLatin1("[%1] ").arg(dt.time().toString(Qt::DefaultLocaleShortDate)), Log::Time));
 		validHtml(console, true, &tc);
 		tc.movePosition(QTextCursor::End);
 		g.mw->qteLog->setTextCursor(tc);

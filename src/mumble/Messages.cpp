@@ -616,9 +616,9 @@ void MainWindow::msgTextMessage(const MumbleProto::TextMessage &msg) {
 		target += tr("(Channel) ");
 	}
 
-	const QString &prefix = (name == "") ? "" : QString("%1%2: ").arg(target).arg(name);
+	const QString &prefix = (name == tr("")) ? tr("") : tr("%1%2: ").arg(target).arg(name);
 
-	g.l->log(Log::TextMessage, tr("%1: %2").arg(prefix).arg(u8(msg.message())));
+	g.l->log(Log::TextMessage, tr("%1%2").arg(prefix).arg(u8(msg.message())));
 }
 
 void MainWindow::msgACL(const MumbleProto::ACL &msg) {

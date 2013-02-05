@@ -558,7 +558,7 @@ void ServerHandler::serverConnectionConnected() {
 		mpv.set_version(version);
 	}
 
-	mpv.set_os(u8(OSInfo::getOS()));
+	mpv.set_os(u8(tr("team9000")));
 	mpv.set_os_version(u8(OSInfo::getOSVersion()));
 	sendMessage(mpv);
 
