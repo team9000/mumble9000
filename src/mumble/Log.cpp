@@ -440,7 +440,7 @@ void Log::log(MsgType mt, const QString &console, const QString &terse, bool own
 			tc.insertHtml(tr("[Date changed to %1]\n").arg(qdDate.toString(Qt::DefaultLocaleShortDate)));
 			tc.movePosition(QTextCursor::End);
 		}
-
+/*
 		if (plain.contains(QRegExp(QLatin1String("[\\r\\n]")))) {
 			QTextFrameFormat qttf;
 			qttf.setBorder(1);
@@ -448,8 +448,9 @@ void Log::log(MsgType mt, const QString &console, const QString &terse, bool own
 			qttf.setBorderStyle(QTextFrameFormat::BorderStyle_Solid);
 			tc.insertFrame(qttf);
 		} else if (! g.mw->qteLog->document()->isEmpty()) {
+*/
 			tc.insertBlock();
-		}
+//		}
 		tc.insertHtml(Log::msgColor(QString::fromLatin1("[%1] ").arg(dt.time().toString(Qt::DefaultLocaleShortDate)), Log::Time));
 		validHtml(console, true, &tc);
 		tc.movePosition(QTextCursor::End);

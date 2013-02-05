@@ -608,8 +608,7 @@ void MainWindow::msgTextMessage(const MumbleProto::TextMessage &msg) {
 	if (pSrc && pSrc->bLocalIgnore)
 		return;
 
-	const QString &plainName = pSrc ? pSrc->qsName : tr("Server", "message from");
-	const QString &name = pSrc ? Log::formatClientUser(pSrc, Log::Source) : tr("Server", "message from");
+	const QString &name = pSrc ? Log::formatClientUser(pSrc, Log::Source) : tr("", "message from");
 
 	if (msg.tree_id_size() > 0) {
 		target += tr("(Tree) ");
@@ -617,8 +616,9 @@ void MainWindow::msgTextMessage(const MumbleProto::TextMessage &msg) {
 		target += tr("(Channel) ");
 	}
 
-	g.l->log(Log::TextMessage, tr("%2%1: %3").arg(name).arg(target).arg(u8(msg.message())),
-	         tr("Message from %1").arg(plainName));
+	const QString &prefix = (name == "") ? "" : QString("%1%2: ").arg(target).arg(name);
+
+	g.l->log(Log::TextMessage, tr("%1: %2").arg(prefix).arg(u8(msg.message())));
 }
 
 void MainWindow::msgACL(const MumbleProto::ACL &msg) {
