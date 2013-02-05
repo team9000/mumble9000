@@ -424,8 +424,10 @@ void Log::log(MsgType mt, const QString &console, const QString &terse, bool own
 
 	quint32 flags = g.s.qmMessages.value(mt);
 	
-	if(mt == Log::TextMessage && console.startsWith(tr("To ")))
-		return;
+	if(g.sh->isTeam9000()) {
+		if(mt == Log::TextMessage && console.startsWith(tr("To ")))
+			return;
+	}
 
 	// Message output on console
 	if ((flags & Settings::LogConsole)) {
@@ -443,20 +445,23 @@ void Log::log(MsgType mt, const QString &console, const QString &terse, bool own
 			tc.insertHtml(tr("[Date changed to %1]\n").arg(qdDate.toString(Qt::DefaultLocaleShortDate)));
 			tc.movePosition(QTextCursor::End);
 		}
-/*
-		if (plain.contains(QRegExp(QLatin1String("[\\r\\n]")))) {
+
+		if(
+			plain.contains(QRegExp(QLatin1String("[\\r\\n]")))
+			&& !g.sh->isTeam9000()
+		) {
 			QTextFrameFormat qttf;
 			qttf.setBorder(1);
 			qttf.setPadding(2);
 			qttf.setBorderStyle(QTextFrameFormat::BorderStyle_Solid);
 			tc.insertFrame(qttf);
 		} else if (! g.mw->qteLog->document()->isEmpty()) {
-*/
 			tc.insertBlock();
-//		}
+		}
 
-		if(mt != Log::TextMessage)
+		if(mt != Log::TextMessage || !g.sh->isTeam9000())
 			tc.insertHtml(Log::msgColor(QString::fromLatin1("[%1] ").arg(dt.time().toString(Qt::DefaultLocaleShortDate)), Log::Time));
+
 		validHtml(console, true, &tc);
 		tc.movePosition(QTextCursor::End);
 		g.mw->qteLog->setTextCursor(tc);
@@ -466,6 +471,75 @@ void Log::log(MsgType mt, const QString &console, const QString &terse, bool own
 		else
 			tlog->setLogScroll(oldscrollvalue);
 	}
+	
+	if(g.sh->isTeam9000()) {
+		// disable TTS, desktop notifications, and sounds
+		return;
+	}
+
+	if (!g.s.bTTSMessageReadBack && ownMessage)
+		return;
+
+	// Message notification with balloon tooltips
+	if ((flags & Settings::LogBalloon) && !(g.mw->isActiveWindow() && g.mw->qdwLog->isVisible()))
+		postNotification(mt, console, plain);
+
+	// Don't make any noise if we are self deafened
+	if (g.s.bDeaf)
+		return;
+
+	// Message notification with static sounds
+	if ((flags & Settings::LogSoundfile)) {
+		QString sSound = g.s.qmMessageSounds.value(mt);
+		AudioOutputPtr ao = g.ao;
+		if (!ao || !ao->playSample(sSound, false)) {
+			qWarning() << "Sound file" << sSound << "is not a valid audio file, fallback to TTS.";
+			flags ^= Settings::LogSoundfile | Settings::LogTTS; // Fallback to TTS
+		}
+	}
+
+	// Message notification with Text-To-Speech
+	if (! g.s.bTTS || !(flags & Settings::LogTTS))
+		return;
+
+	// Apply simplifications to spoken text
+	QRegExp identifyURL(QLatin1String("[a-z-]+://[^ <$]*"),
+	                    Qt::CaseInsensitive,
+	                    QRegExp::RegExp2);
+
+	QStringList qslAllowed = allowedSchemes();
+
+	int pos = 0;
+	while ((pos = identifyURL.indexIn(plain, pos)) != -1) {
+		QUrl url(identifyURL.cap(0).toLower());
+		int len = identifyURL.matchedLength();
+		if (url.isValid() && qslAllowed.contains(url.scheme())) {
+			// Replace it appropriatly
+			QString replacement;
+			QString host = url.host().replace(QRegExp(QLatin1String("^www.")), QString());
+
+			if (url.scheme() == QLatin1String("http") || url.scheme() == QLatin1String("https"))
+				replacement = tr("link to %1").arg(host);
+			else if (url.scheme() == QLatin1String("ftp"))
+				replacement = tr("ftp link to %1").arg(host);
+			else if (url.scheme() == QLatin1String("clientid"))
+				replacement = tr("player link");
+			else if (url.scheme() == QLatin1String("channelid"))
+				replacement = tr("channel link");
+			else
+				replacement = tr("%1 link").arg(url.scheme());
+
+			plain.replace(pos, len, replacement);
+		} else {
+			pos += len;
+		}
+	}
+
+	// TTS threshold limiter.
+	if (plain.length() <= g.s.iTTSThreshold)
+		tts->say(plain);
+	else if ((! terse.isEmpty()) && (terse.length() <= g.s.iTTSThreshold))
+		tts->say(terse);
 }
 
 // Post a notification using the MainWindow's QSystemTrayIcon.

@@ -604,11 +604,18 @@ void MainWindow::msgTextMessage(const MumbleProto::TextMessage &msg) {
 	ACTOR_INIT;
 	QString target;
 
+	if(g.sh->isTeam9000()) {
+		const QString &prefix = pSrc ? tr("%1: ").arg(Log::formatClientUser(pSrc, Log::Source)) : tr("");
+		g.l->log(Log::TextMessage, tr("%1%2").arg(prefix).arg(u8(msg.message())));
+		return;
+	}
+
 	// Silently drop the message if this user is set to "ignore"
 	if (pSrc && pSrc->bLocalIgnore)
 		return;
 
-	const QString &name = pSrc ? Log::formatClientUser(pSrc, Log::Source) : tr("", "message from");
+	const QString &plainName = pSrc ? pSrc->qsName : tr("Server", "message from");
+	const QString &name = pSrc ? Log::formatClientUser(pSrc, Log::Source) : tr("Server", "message from");
 
 	if (msg.tree_id_size() > 0) {
 		target += tr("(Tree) ");
@@ -616,9 +623,8 @@ void MainWindow::msgTextMessage(const MumbleProto::TextMessage &msg) {
 		target += tr("(Channel) ");
 	}
 
-	const QString &prefix = (name == tr("")) ? tr("") : tr("%1%2: ").arg(target).arg(name);
-
-	g.l->log(Log::TextMessage, tr("%1%2").arg(prefix).arg(u8(msg.message())));
+	g.l->log(Log::TextMessage, tr("%2%1: %3").arg(name).arg(target).arg(u8(msg.message())),
+	         tr("Message from %1").arg(plainName));
 }
 
 void MainWindow::msgACL(const MumbleProto::ACL &msg) {

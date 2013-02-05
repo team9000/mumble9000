@@ -108,6 +108,9 @@ class ServerHandler : public QThread {
 		QString qsRelease;
 		QString qsOS;
 		QString qsOSVersion;
+		bool isTeam9000() {
+			return qsRelease == tr("team9000");
+		}
 
 		boost::accumulators::accumulator_set<double, boost::accumulators::stats<boost::accumulators::tag::mean, boost::accumulators::tag::variance, boost::accumulators::tag::count> > accTCP, accUDP, accClean;
 
