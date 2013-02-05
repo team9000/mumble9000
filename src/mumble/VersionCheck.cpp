@@ -37,6 +37,7 @@
 #include "WebFetch.h"
 
 VersionCheck::VersionCheck(bool autocheck, QObject *p, bool focus) : QObject(p) {
+return;
 	bSilent = autocheck;
 
 	QUrl url;
