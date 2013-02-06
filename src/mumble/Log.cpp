@@ -424,8 +424,9 @@ void Log::log(MsgType mt, const QString &console, const QString &terse, bool own
 
 	quint32 flags = g.s.qmMessages.value(mt);
 	
+	QString out = console;
 	if(g.isTeam9000()) {
-		if(mt == Log::TextMessage && console.startsWith(tr("To ")))
+		if(mt == Log::TextMessage && out.startsWith(tr("To ")))
 			return;
 		if(
 			mt != Log::TextMessage
@@ -435,6 +436,15 @@ void Log::log(MsgType mt, const QString &console, const QString &terse, bool own
 			&& mt != Log::ServerConnected
 			&& mt != Log::ServerDisconnected
 		) return;
+		
+		if(mt == Log::TextMessage) {
+			QString time = dt.time().toString(QLatin1String("H:mm"));
+			out = out.replace(QLatin1String("```TIME```"), time);
+			
+			QString textColor = QLatin1String("black");
+			if(g.s.nkInvertText) textColor = QLatin1String("white");
+			out = out.replace(QLatin1String("```COLOR```"), textColor);
+		}
 	}
 
 	// Message output on console
@@ -470,7 +480,7 @@ void Log::log(MsgType mt, const QString &console, const QString &terse, bool own
 		if(mt != Log::TextMessage || !g.isTeam9000())
 			tc.insertHtml(Log::msgColor(QString::fromLatin1("[%1] ").arg(dt.time().toString(Qt::DefaultLocaleShortDate)), Log::Time));
 
-		validHtml(console, true, &tc);
+		validHtml(out, true, &tc);
 		tc.movePosition(QTextCursor::End);
 		g.mw->qteLog->setTextCursor(tc);
 
@@ -480,7 +490,7 @@ void Log::log(MsgType mt, const QString &console, const QString &terse, bool own
 			tlog->setLogScroll(oldscrollvalue);
 	}
 	
-	if(g.isTeam9000()) {
+	if(g.isTeam9000() && g.s.nkRemoveNotifications) {
 		// disable TTS, desktop notifications, and sounds
 		return;
 	}

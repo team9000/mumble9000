@@ -178,6 +178,9 @@ struct Settings {
 	static const QString cqsDefaultPushClickOff;
 	QString qsTxAudioCueOn;
 	QString qsTxAudioCueOff;
+	
+	bool nkRemoveNotifications;
+	bool nkInvertText;
 
 	bool bTransmitPosition;
 	bool bMute, bDeaf;

@@ -251,6 +251,10 @@ Settings::Settings() {
 	qRegisterMetaTypeStreamOperators<ShortcutTarget> ("ShortcutTarget");
 	qRegisterMetaType<QVariant> ("QVariant");
 
+	// Mumble9000
+	nkRemoveNotifications = true;
+	nkInvertText = false;
+
 	atTransmit = VAD;
 	bTransmitPosition = false;
 	bMute = bDeaf = false;
@@ -534,6 +538,9 @@ void Settings::load() {
 void Settings::load(QSettings* settings_ptr) {
 	// Config updates
 	SAVELOAD(uiUpdateCounter, "lastupdate");
+	
+	SAVELOAD(nkRemoveNotifications, "nk/removenotifications");
+	SAVELOAD(nkInvertText, "nk/removenotifications");
 
 	SAVELOAD(bMute, "audio/mute");
 	SAVELOAD(bDeaf, "audio/deaf");
@@ -820,6 +827,9 @@ void Settings::save() {
 
 	// Config updates
 	SAVELOAD(uiUpdateCounter, "lastupdate");
+	
+	SAVELOAD(nkRemoveNotifications, "nk/removenotifications");
+	SAVELOAD(nkInvertText, "nk/removenotifications");
 
 	SAVELOAD(bMute, "audio/mute");
 	SAVELOAD(bDeaf, "audio/deaf");
