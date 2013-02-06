@@ -23,7 +23,7 @@ CALL "%TOOLCHAIN%\env.bat"
 ::Set Include=%DXSDK_DIR%\Include;%Include%
 SET DXSDK_DIR=%DXSDK_DIR%\
 CALL "%TOOLCHAIN%\VC\vcvarsall.bat" x86
-SET PATH=%TOOLCHAIN%\win8sdk\bin\x86;%GITBIN_DIR%;%PERLBIN_DIR%;%QT_DIR%\bin;%OPENSSL_DIR%\bin;%LIBSNDFILE_DIR%\bin;%MYSQL_DIR%\lib;%ICE_DIR%\bin\vc100;%PROTOBUF_DIR%;%NASM_DIR%;%VLD_DIR%\bin;%PATH%
+SET PATH=%TOOLCHAIN%\win8sdk\bin\x86;%GITBIN_DIR%;%PERLBIN_DIR%;%QT_DIR%\bin;%OPENSSL_DIR%\bin;%LIBSNDFILE_DIR%\bin;%MYSQL_DIR%\lib;%ICE_DIR%\bin\vc100;%PROTOBUF_DIR%\vsprojects\Release;%NASM_DIR%;%VLD_DIR%\bin;%PATH%
 
 chdir /d %OLDDIR%
 TITLE Mumble Development Environment

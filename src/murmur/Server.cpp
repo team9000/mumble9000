@@ -1151,11 +1151,7 @@ void Server::encrypted() {
 
 	MumbleProto::Version mpv;
 	mpv.set_version((major << 16) | (minor << 8) | patch);
-	if (Meta::mp.bSendVersion) {
-		mpv.set_release(u8(QString("team9000")));
-		mpv.set_os(u8(QString()));
-		mpv.set_os_version(u8(QString()));
-	}
+	mpv.set_release(u8(QString("team9000")));
 	sendMessage(uSource, mpv);
 
 	QList<QSslCertificate> certs = uSource->peerCertificateChain();

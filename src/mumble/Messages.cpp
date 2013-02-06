@@ -150,7 +150,7 @@ void MainWindow::msgServerSync(const MumbleProto::ServerSync &msg) {
 	ClientUser *p=ClientUser::get(g.uiSession);
 	connect(p, SIGNAL(talkingChanged()), this, SLOT(talkingChanged()));
 
-	qstiIcon->setToolTip(tr("Mumble: %1").arg(Channel::get(0)->qsName));
+	qstiIcon->setToolTip(tr("Mumble9000: %1").arg(Channel::get(0)->qsName));
 
 	// Update QActions and menues
 	on_qmServer_aboutToShow();
@@ -604,7 +604,7 @@ void MainWindow::msgTextMessage(const MumbleProto::TextMessage &msg) {
 	ACTOR_INIT;
 	QString target;
 
-	if(g.sh->isTeam9000()) {
+	if(g.isTeam9000()) {
 		const QString &prefix = pSrc ? tr("%1: ").arg(Log::formatClientUser(pSrc, Log::Source)) : tr("");
 		g.l->log(Log::TextMessage, tr("%1%2").arg(prefix).arg(u8(msg.message())));
 		return;

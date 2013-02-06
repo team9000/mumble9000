@@ -424,7 +424,7 @@ void Log::log(MsgType mt, const QString &console, const QString &terse, bool own
 
 	quint32 flags = g.s.qmMessages.value(mt);
 	
-	if(g.sh->isTeam9000()) {
+	if(g.isTeam9000()) {
 		if(mt == Log::TextMessage && console.startsWith(tr("To ")))
 			return;
 	}
@@ -448,7 +448,7 @@ void Log::log(MsgType mt, const QString &console, const QString &terse, bool own
 
 		if(
 			plain.contains(QRegExp(QLatin1String("[\\r\\n]")))
-			&& !g.sh->isTeam9000()
+			&& !g.isTeam9000()
 		) {
 			QTextFrameFormat qttf;
 			qttf.setBorder(1);
@@ -459,7 +459,7 @@ void Log::log(MsgType mt, const QString &console, const QString &terse, bool own
 			tc.insertBlock();
 		}
 
-		if(mt != Log::TextMessage || !g.sh->isTeam9000())
+		if(mt != Log::TextMessage || !g.isTeam9000())
 			tc.insertHtml(Log::msgColor(QString::fromLatin1("[%1] ").arg(dt.time().toString(Qt::DefaultLocaleShortDate)), Log::Time));
 
 		validHtml(console, true, &tc);
@@ -472,7 +472,7 @@ void Log::log(MsgType mt, const QString &console, const QString &terse, bool own
 			tlog->setLogScroll(oldscrollvalue);
 	}
 	
-	if(g.sh->isTeam9000()) {
+	if(g.isTeam9000()) {
 		// disable TTS, desktop notifications, and sounds
 		return;
 	}
