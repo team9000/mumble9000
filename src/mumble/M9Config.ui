@@ -29,7 +29,14 @@
       <item>
        <widget class="QCheckBox" name="qcbRemoveNotifications">
         <property name="text">
-         <string>Globally disable TTS, Popups, and Notification Sounds</string>
+         <string>Disable TTS, Popups, and Notification Sounds AT ALL TIMES</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="qcbRemoveNotificationsOnFocused">
+        <property name="text">
+         <string>Disable TTS, Popups, and Notification Sounds WHEN WINDOW IS FOCUSED</string>
         </property>
        </widget>
       </item>

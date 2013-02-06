@@ -180,6 +180,7 @@ struct Settings {
 	QString qsTxAudioCueOff;
 	
 	bool nkRemoveNotifications;
+	bool nkRemoveNotificationsOnFocused;
 	bool nkInvertText;
 
 	bool bTransmitPosition;

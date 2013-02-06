@@ -26,11 +26,13 @@ QIcon M9Config::icon() const {
 
 void M9Config::load(const Settings &r) {
 	loadCheckBox(qcbRemoveNotifications, r.nkRemoveNotifications);
+	loadCheckBox(qcbRemoveNotificationsOnFocused, r.nkRemoveNotificationsOnFocused);
 	loadCheckBox(qcbInvertText, r.nkInvertText);
 }
 
 void M9Config::save() const {
 	s.nkRemoveNotifications = qcbRemoveNotifications->isChecked();
+	s.nkRemoveNotificationsOnFocused = qcbRemoveNotificationsOnFocused->isChecked();
 	s.nkInvertText = qcbInvertText->isChecked();
 }
 

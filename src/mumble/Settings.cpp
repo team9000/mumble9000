@@ -253,6 +253,7 @@ Settings::Settings() {
 
 	// Mumble9000
 	nkRemoveNotifications = true;
+	nkRemoveNotificationsOnFocused = true;
 	nkInvertText = false;
 
 	atTransmit = VAD;
@@ -540,7 +541,8 @@ void Settings::load(QSettings* settings_ptr) {
 	SAVELOAD(uiUpdateCounter, "lastupdate");
 	
 	SAVELOAD(nkRemoveNotifications, "nk/removenotifications");
-	SAVELOAD(nkInvertText, "nk/removenotifications");
+	SAVELOAD(nkRemoveNotificationsOnFocused, "nk/removenotificationsonfocused");
+	SAVELOAD(nkInvertText, "nk/inverttext");
 
 	SAVELOAD(bMute, "audio/mute");
 	SAVELOAD(bDeaf, "audio/deaf");
@@ -829,7 +831,8 @@ void Settings::save() {
 	SAVELOAD(uiUpdateCounter, "lastupdate");
 	
 	SAVELOAD(nkRemoveNotifications, "nk/removenotifications");
-	SAVELOAD(nkInvertText, "nk/removenotifications");
+	SAVELOAD(nkRemoveNotificationsOnFocused, "nk/removenotificationsonfocused");
+	SAVELOAD(nkInvertText, "nk/inverttext");
 
 	SAVELOAD(bMute, "audio/mute");
 	SAVELOAD(bDeaf, "audio/deaf");

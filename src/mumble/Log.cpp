@@ -444,6 +444,12 @@ void Log::log(MsgType mt, const QString &console, const QString &terse, bool own
 			QString textColor = QLatin1String("black");
 			if(g.s.nkInvertText) textColor = QLatin1String("white");
 			out = out.replace(QLatin1String("```COLOR```"), textColor);
+			
+			QRegExp rx(QLatin1String("(.*)```PLAINa```(.*)```PLAINb```(.*)"));
+			if(rx.indexIn(out) != -1) {
+				plain = rx.cap(2);
+				out = rx.cap(1)+rx.cap(3);
+			}
 		}
 	}
 
@@ -490,9 +496,14 @@ void Log::log(MsgType mt, const QString &console, const QString &terse, bool own
 			tlog->setLogScroll(oldscrollvalue);
 	}
 	
-	if(g.isTeam9000() && g.s.nkRemoveNotifications) {
-		// disable TTS, desktop notifications, and sounds
-		return;
+	if(g.isTeam9000()) {
+		if(g.s.nkRemoveNotifications) {
+			// disable TTS, desktop notifications, and sounds
+			return;
+		}
+		if(g.s.nkRemoveNotificationsOnFocused && qApp->activeWindow() != 0) {
+			return;
+		}
 	}
 
 	if (!g.s.bTTSMessageReadBack && ownMessage)
