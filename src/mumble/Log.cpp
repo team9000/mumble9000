@@ -427,6 +427,14 @@ void Log::log(MsgType mt, const QString &console, const QString &terse, bool own
 	if(g.isTeam9000()) {
 		if(mt == Log::TextMessage && console.startsWith(tr("To ")))
 			return;
+		if(
+			mt != Log::TextMessage
+			&& mt != Log::Information
+			&& mt != Log::CriticalError
+			&& mt != Log::Warning
+			&& mt != Log::ServerConnected
+			&& mt != Log::ServerDisconnected
+		) return;
 	}
 
 	// Message output on console
