@@ -26,3 +26,5 @@ src/murmur/Murmur.h
 src/murmur/Murmur.cpp
 mumble_ol_resource.rc
 celt0_resource.rc
+installer/obj
+Mumble.msi

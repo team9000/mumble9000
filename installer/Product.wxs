@@ -153,21 +153,6 @@
       
     </Feature>
 
-    <Feature Id="Murmur" Title="!(loc.MUMBLE_SEC_MURMUR)" Description="!(loc.DESC_SectionMurmur)" Level="1000" ConfigurableDirectory="INSTALLDIR">
-      <?ifdef IceDir ?>
-        <ComponentRef Id="bzip2.dll" />
-        <ComponentRef Id="ice34.dll" />
-        <ComponentRef Id="iceutil34.dll" />
-      <?endif ?>
-      <?ifdef DBusDir ?>
-        <ComponentGroupRef Id="DBus" />
-      <?endif ?>
-
-      <ComponentRef Id="murmur.exe" />
-      <ComponentRef Id="murmur.ini" />
-      <ComponentRef Id="Murmur.ice" />
-    </Feature>
-
     <Feature Id="Libraries" Title="Required Libraries" Display="hidden" AllowAdvertise="no" Absent="disallow" Level="1">
       <ComponentGroupRef Id="LibrariesCommon" />
       <ComponentRef Id="ApplicationProgramsFolderRemovalComponent" />

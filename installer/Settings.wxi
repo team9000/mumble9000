@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Include>
-  <?define ProductName = "Mumble" ?>
+  <?define ProductName = "Mumble9000" ?>
   <?define ProductManufacturer = "Thorvald Natvig" ?>
-  <?define ProductVersion = "1.2.4" ?>
+  <?define ProductVersion = "$(env.MumbleVersion)" ?>
 
   <!-- Defaults for values that aren't given by environment variables -->
   <?ifndef env.MumbleSourceDir ?>

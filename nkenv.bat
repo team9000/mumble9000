@@ -1,5 +1,7 @@
 @echo off
 
+SET MumbleVersion=1.0.2
+
 SET DIR=d:\mumble
 SET VSVER=10.0
 SET LIB=
@@ -17,6 +19,7 @@ SET TOOLCHAIN=d:\chrome\win_toolchain
 SET GITBIN_DIR=d:\chrome\depot_tools
 SET PERLBIN_DIR=%DIR%\perl\bin
 SET ZLIB_DIR=%DIR%\zlib
+SET DEBUGTOOLS_DIR=%TOOLCHAIN%\WDK\bin
 
 SET OLDDIR=%CD%
 CALL "%TOOLCHAIN%\env.bat"

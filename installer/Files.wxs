@@ -39,18 +39,6 @@
         </Component>
       <?endif ?>
 
-      <Component Id="murmur.exe">
-        <File Id="murmur.exe" Source="$(var.SourceDir)\release\murmur.exe" KeyPath="yes">
-          <Shortcut Id="MurmurShortcut" Directory="ApplicationProgramsFolder" Name="Murmur" WorkingDirectory="INSTALLDIR" Icon="murmur.ico" IconIndex="0" Advertise="yes" />
-        </File>
-      </Component>
-      <Component Id="murmur.ini" NeverOverwrite="yes">
-        <File Source="$(var.SourceDir)\scripts\murmur.ini.win32" Name="murmur.ini" KeyPath="yes" />
-      </Component>
-      <Component Id="Murmur.ice">
-        <File Source="$(var.SourceDir)\src\murmur\Murmur.ice" KeyPath="yes" />
-      </Component>
-
       <Component Id="qt.conf">
         <File Source="$(var.SourceDir)\scripts\qt.conf" KeyPath="yes" />
       </Component>
