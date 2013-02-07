@@ -29,7 +29,7 @@
       VersionNT > 501 OR (VersionNT = 501 AND ServicePackLevel >= 2) OR (VersionNT = 502 AND ServicePackLevel >= 1)
     </Condition>
 
-    <MajorUpgrade AllowDowngrades='yes' MigrateFeatures='yes' Schedule='afterInstallExecute' />
+    <MajorUpgrade AllowDowngrades='yes' MigrateFeatures='yes' />
 
     <Media Id="1" Cabinet="$(var.ProductName).cab" EmbedCab="yes" CompressionLevel="high" />
 
@@ -169,7 +169,6 @@
       <AppSearch Sequence='1' />
       <Custom Action="SetNSISPath" After="AppSearch">NSISINSTALL</Custom>
       <Custom Action='NSISUninstall' After='InstallInitialize'>NSISINSTALL AND NOT Installed</Custom>
-	  <RemoveExistingProducts After="InstallInitialize" />
     </InstallExecuteSequence>
   </Product>
 </Wix>
