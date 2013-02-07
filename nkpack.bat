@@ -1,0 +1,13 @@
+set MumbleSourceDir=%~dp0
+set MumbleQtDir=%QT_DIR%
+set MumbleSndFileDir=%LIBSNDFILE_DIR%\bin
+set MumbleNoMySQL=1
+set MumbleNoIce=1
+set MumbleOpenSslDir=%OPENSSL_DIR%
+set MumbleZlibDir=%ZLIB_DIR%
+set MumbleNoSSE2=1
+set MumbleNoG15=1
+set WixToolPath=%DIR%\wix
+set WixTargetsPath=%WixToolPath%\Wix.targets
+set WixTasksPath=%WixToolPath%\wixtasks.dll
+msbuild installer/MumbleInstall.sln /p:Configuration=Release /t:Clean;Build

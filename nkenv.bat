@@ -16,6 +16,7 @@ SET BOOST_DIR=%DIR%\boost
 SET TOOLCHAIN=d:\chrome\win_toolchain
 SET GITBIN_DIR=d:\chrome\depot_tools
 SET PERLBIN_DIR=%DIR%\perl\bin
+SET ZLIB_DIR=%DIR%\zlib
 
 SET OLDDIR=%CD%
 CALL "%TOOLCHAIN%\env.bat"
