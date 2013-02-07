@@ -13,8 +13,8 @@ set WixToolPath=%DIR%\wix
 set WixTargetsPath=%WixToolPath%\Wix.targets
 set WixTasksPath=%WixToolPath%\wixtasks.dll
 cd installer
-::msbuild MumbleInstall.sln /p:Configuration=Release /t:Clean;Build
-::perl build_installer.pl
+msbuild MumbleInstall.sln /p:Configuration=Release /t:Clean;Build
+perl build_installer.pl
 cd ..
-del Mumble.msi
+if exist Mumble.msi (del Mumble.msi)
 move installer\bin\Release\Mumble.msi Mumble.msi
