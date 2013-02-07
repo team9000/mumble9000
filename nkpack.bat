@@ -16,5 +16,6 @@ cd installer
 msbuild MumbleInstall.sln /p:Configuration=Release /t:Clean;Build
 perl build_installer.pl
 cd ..
-if exist Mumble.msi (del Mumble.msi)
-move installer\bin\Release\Mumble.msi Mumble.msi
+del /q Mumble.msi
+del /q Mumble.*.msi
+move installer\bin\Release\Mumble.msi Mumble9000.%MumbleVersion%.msi
