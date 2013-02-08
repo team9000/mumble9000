@@ -28,12 +28,18 @@ void M9Config::load(const Settings &r) {
 	loadCheckBox(qcbRemoveNotifications, r.nkRemoveNotifications);
 	loadCheckBox(qcbRemoveNotificationsOnFocused, r.nkRemoveNotificationsOnFocused);
 	loadCheckBox(qcbInvertText, r.nkInvertText);
+	loadCheckBox(qcbFixAudio, r.nkFixAudio);
+	loadCheckBox(qcbDisablePositional, r.nkDisablePositional);
+	loadCheckBox(qcbDisableOverlay, r.nkDisableOverlay);
 }
 
 void M9Config::save() const {
 	s.nkRemoveNotifications = qcbRemoveNotifications->isChecked();
 	s.nkRemoveNotificationsOnFocused = qcbRemoveNotificationsOnFocused->isChecked();
 	s.nkInvertText = qcbInvertText->isChecked();
+	s.nkFixAudio = qcbFixAudio->isChecked();
+	s.nkDisablePositional = qcbDisablePositional->isChecked();
+	s.nkDisableOverlay = qcbDisableOverlay->isChecked();
 }
 
 void M9Config::accept() const {

@@ -255,6 +255,9 @@ Settings::Settings() {
 	nkRemoveNotifications = true;
 	nkRemoveNotificationsOnFocused = true;
 	nkInvertText = false;
+	nkFixAudio = true;
+	nkDisablePositional = true;
+	nkDisableOverlay = true;
 
 	atTransmit = VAD;
 	bTransmitPosition = false;
@@ -534,6 +537,27 @@ void OverlaySettings::load(QSettings* settings_ptr) {
 
 void Settings::load() {
 	load(g.qs);
+	
+	// Mumble9000 fixes
+	g.s.iMaxLogBlocks = 500;
+	g.s.bUsage = false;
+	if(g.s.nkFixAudio) {
+		g.s.bEcho = false;
+		g.s.bExclusiveInput = false;
+		g.s.iQuality = 96000;
+		g.s.iFramesPerPacket = 3;
+		
+		g.s.bExclusiveOutput = false;
+		g.s.bAttenuateOthersOnTalk = false;
+		g.s.bAttenuateOthers = false;
+	}
+	if(g.s.nkDisablePositional) {
+		g.s.bPositionalAudio = false;
+		g.s.bPluginCheck = false;
+	}
+	if(g.s.nkDisableOverlay) {
+		g.s.os.bEnable = false;
+	}
 }
 
 void Settings::load(QSettings* settings_ptr) {
@@ -543,6 +567,9 @@ void Settings::load(QSettings* settings_ptr) {
 	SAVELOAD(nkRemoveNotifications, "nk/removenotifications");
 	SAVELOAD(nkRemoveNotificationsOnFocused, "nk/removenotificationsonfocused");
 	SAVELOAD(nkInvertText, "nk/inverttext");
+	SAVELOAD(nkFixAudio, "nk/fixaudio");
+	SAVELOAD(nkDisablePositional, "nk/disablepos");
+	SAVELOAD(nkDisableOverlay, "nk/disableoverlay");
 
 	SAVELOAD(bMute, "audio/mute");
 	SAVELOAD(bDeaf, "audio/deaf");
@@ -833,6 +860,9 @@ void Settings::save() {
 	SAVELOAD(nkRemoveNotifications, "nk/removenotifications");
 	SAVELOAD(nkRemoveNotificationsOnFocused, "nk/removenotificationsonfocused");
 	SAVELOAD(nkInvertText, "nk/inverttext");
+	SAVELOAD(nkFixAudio, "nk/fixaudio");
+	SAVELOAD(nkDisablePositional, "nk/disablepos");
+	SAVELOAD(nkDisableOverlay, "nk/disableoverlay");
 
 	SAVELOAD(bMute, "audio/mute");
 	SAVELOAD(bDeaf, "audio/deaf");

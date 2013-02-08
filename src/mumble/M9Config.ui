@@ -23,13 +23,20 @@
       </sizepolicy>
      </property>
      <property name="title">
-      <string>These settings only apply when connected to the Team9000 server</string>
+      <string>Mumble9000 Functionality</string>
      </property>
      <layout class="QVBoxLayout">
       <item>
        <widget class="QCheckBox" name="qcbRemoveNotifications">
         <property name="text">
-         <string>Disable TTS, Popups, and Notification Sounds AT ALL TIMES</string>
+         <string>Disable TTS, Popups, and Notification Sounds ON TEAM9000</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="qcbInvertText">
+        <property name="text">
+         <string>Invert text color (for dark skins) ON TEAM9000</string>
         </property>
        </widget>
       </item>
@@ -40,10 +47,39 @@
         </property>
        </widget>
       </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="qgbConnection">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="title">
+      <string>These settings will CHANGE your settings on each mumble reboot</string>
+     </property>
+     <layout class="QVBoxLayout">
       <item>
-       <widget class="QCheckBox" name="qcbInvertText">
+       <widget class="QCheckBox" name="qcbFixAudio">
         <property name="text">
-         <string>Invert text color (for dark skins)</string>
+         <string>Increase voice quality and ensure voice settings aren't foobared</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="qcbDisablePositional">
+        <property name="text">
+         <string>Disable Positional Audio</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="qcbDisableOverlay">
+        <property name="text">
+         <string>Disable Overlay</string>
         </property>
        </widget>
       </item>

@@ -501,9 +501,9 @@ void Log::log(MsgType mt, const QString &console, const QString &terse, bool own
 			// disable TTS, desktop notifications, and sounds
 			return;
 		}
-		if(g.s.nkRemoveNotificationsOnFocused && qApp->activeWindow() != 0) {
-			return;
-		}
+	}
+	if(g.s.nkRemoveNotificationsOnFocused && qApp->activeWindow() != 0) {
+		return;
 	}
 
 	if (!g.s.bTTSMessageReadBack && ownMessage)

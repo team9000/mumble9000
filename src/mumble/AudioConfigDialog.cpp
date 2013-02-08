@@ -292,6 +292,7 @@ void AudioInputDialog::updateBitrate() {
 	qlBitrate->setText(v);
 
 	qsQuality->setMinimum(8000);
+	qsQuality->setMaximum(256000);
 }
 
 void AudioInputDialog::on_qcbPushClick_clicked(bool b) {

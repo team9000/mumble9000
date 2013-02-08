@@ -1,6 +1,6 @@
 @echo off
 
-SET MumbleVersion=1.0.2
+SET MumbleVersion=1.0.3
 
 SET DIR=d:\mumble
 SET VSVER=10.0
