@@ -132,7 +132,6 @@
       <ComponentRef Id="speex.dll" />
       <ComponentRef Id="speex.txt" />
 
-      <ComponentGroupRef Id="Plugins"/>
       <ComponentRef Id="celt0.0.7.0.dll" />
       <ComponentRef Id="celt0.0.11.0.dll" />
       <ComponentRef Id="opus.dll" />

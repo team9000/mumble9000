@@ -294,7 +294,6 @@
   <!-- Directory tree -->
   <Fragment>
     <DirectoryRef Id="INSTALLDIR">
-      <Directory Id="PluginFolder" Name="plugins" />
       <Directory Id="QtPluginFolder" Name="QtPlugins">
         <Directory Id="QtPluginIconEnginesFolder" Name="iconengines" />
         <Directory Id="QtPluginImageFormatsFolder" Name="imageformats" />
