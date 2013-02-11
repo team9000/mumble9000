@@ -23,7 +23,7 @@ msbuild MumbleInstall.sln /p:Configuration=Release /t:Clean;Build
 perl build_installer.pl
 cd ..
 del /q Mumble.msi
-del /q Mumble.*.msi
+del /q Mumble*.msi
 move installer\bin\Release\Mumble.msi Mumble9000.%MumbleVersion%.msi
 
 signtool sign ^
