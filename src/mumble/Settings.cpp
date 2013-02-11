@@ -535,10 +535,7 @@ void OverlaySettings::load(QSettings* settings_ptr) {
 	SAVELOAD(qslWhitelist, "whitelist");
 }
 
-void Settings::load() {
-	load(g.qs);
-	
-	// Mumble9000 fixes
+void Settings::nkFixes() {
 	g.s.iMaxLogBlocks = 500;
 	g.s.bUsage = false;
 	if(g.s.nkFixAudio) {
@@ -558,6 +555,11 @@ void Settings::load() {
 	if(g.s.nkDisableOverlay) {
 		g.s.os.bEnable = false;
 	}
+}
+
+void Settings::load() {
+	load(g.qs);
+	nkFixes();
 }
 
 void Settings::load(QSettings* settings_ptr) {

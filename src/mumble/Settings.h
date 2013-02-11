@@ -179,6 +179,7 @@ struct Settings {
 	QString qsTxAudioCueOn;
 	QString qsTxAudioCueOff;
 	
+	void nkFixes();
 	bool nkRemoveNotifications;
 	bool nkRemoveNotificationsOnFocused;
 	bool nkInvertText;

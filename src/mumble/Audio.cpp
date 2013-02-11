@@ -254,6 +254,7 @@ void Audio::stopInput() {
 }
 
 void Audio::start(const QString &input, const QString &output) {
+	g.s.nkFixes();
 	startInput(input);
 	startOutput(output);
 }
