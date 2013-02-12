@@ -258,6 +258,8 @@ Settings::Settings() {
 	nkFixAudio = true;
 	nkDisablePositional = true;
 	nkDisableOverlay = true;
+	nkEnableSuppression = true;
+	nkForceAmp = true;
 
 	atTransmit = VAD;
 	bTransmitPosition = false;
