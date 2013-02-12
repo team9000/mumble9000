@@ -34,16 +34,16 @@
        </widget>
       </item>
       <item>
-       <widget class="QCheckBox" name="qcbInvertText">
+       <widget class="QCheckBox" name="qcbRemoveNotificationsOnFocused">
         <property name="text">
-         <string>Invert text color (for dark skins) ON TEAM9000</string>
+         <string>Disable TTS, Popups, and Notification Sounds WHEN WINDOW IS FOCUSED</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QCheckBox" name="qcbRemoveNotificationsOnFocused">
+       <widget class="QCheckBox" name="qcbInvertText">
         <property name="text">
-         <string>Disable TTS, Popups, and Notification Sounds WHEN WINDOW IS FOCUSED</string>
+         <string>Invert text color (for dark skins) ON TEAM9000</string>
         </property>
        </widget>
       </item>
@@ -59,7 +59,7 @@
       </sizepolicy>
      </property>
      <property name="title">
-      <string>These settings will CHANGE your settings on each mumble reboot</string>
+      <string>These settings OVERRIDE the settings you set elsewhere</string>
      </property>
      <layout class="QVBoxLayout">
       <item>
@@ -80,6 +80,20 @@
        <widget class="QCheckBox" name="qcbDisableOverlay">
         <property name="text">
          <string>Disable Overlay</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="qcbEnableSuppression">
+        <property name="text">
+         <string>Enable Noise Suppression at -30dB</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="qcbForceAmp">
+        <property name="text">
+         <string>Set max amplification to 1.00</string>
         </property>
        </widget>
       </item>

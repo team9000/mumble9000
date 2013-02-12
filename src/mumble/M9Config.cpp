@@ -31,6 +31,8 @@ void M9Config::load(const Settings &r) {
 	loadCheckBox(qcbFixAudio, r.nkFixAudio);
 	loadCheckBox(qcbDisablePositional, r.nkDisablePositional);
 	loadCheckBox(qcbDisableOverlay, r.nkDisableOverlay);
+	loadCheckBox(qcbEnableSuppression, r.nkEnableSuppression);
+	loadCheckBox(qcbForceAmp, r.nkForceAmp);
 }
 
 void M9Config::save() const {
@@ -40,6 +42,8 @@ void M9Config::save() const {
 	s.nkFixAudio = qcbFixAudio->isChecked();
 	s.nkDisablePositional = qcbDisablePositional->isChecked();
 	s.nkDisableOverlay = qcbDisableOverlay->isChecked();
+	s.nkEnableSuppression = qcbEnableSuppression->isChecked();
+	s.nkForceAmp = qcbForceAmp->isChecked();
 }
 
 void M9Config::accept() const {

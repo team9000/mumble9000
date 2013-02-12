@@ -186,6 +186,8 @@ struct Settings {
 	bool nkFixAudio;
 	bool nkDisablePositional;
 	bool nkDisableOverlay;
+	bool nkEnableSuppression;
+	bool nkForceAmp;
 
 	bool bTransmitPosition;
 	bool bMute, bDeaf;

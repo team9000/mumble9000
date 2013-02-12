@@ -555,6 +555,13 @@ void Settings::nkFixes() {
 	if(g.s.nkDisableOverlay) {
 		g.s.os.bEnable = false;
 	}
+	if(g.s.nkEnableSuppression) {
+		g.s.iNoiseSuppress = -30;
+	}
+	if(g.s.nkForceAmp) {
+		double maxAmp = 2.0;
+		g.s.iMinLoudness = (20000*(maxAmp-1))/maxAmp;
+	}
 }
 
 void Settings::load() {
@@ -572,6 +579,8 @@ void Settings::load(QSettings* settings_ptr) {
 	SAVELOAD(nkFixAudio, "nk/fixaudio");
 	SAVELOAD(nkDisablePositional, "nk/disablepos");
 	SAVELOAD(nkDisableOverlay, "nk/disableoverlay");
+	SAVELOAD(nkEnableSuppression, "nk/enablesuppression");
+	SAVELOAD(nkForceAmp, "nk/forceamp");
 
 	SAVELOAD(bMute, "audio/mute");
 	SAVELOAD(bDeaf, "audio/deaf");
@@ -865,6 +874,8 @@ void Settings::save() {
 	SAVELOAD(nkFixAudio, "nk/fixaudio");
 	SAVELOAD(nkDisablePositional, "nk/disablepos");
 	SAVELOAD(nkDisableOverlay, "nk/disableoverlay");
+	SAVELOAD(nkEnableSuppression, "nk/enablesuppression");
+	SAVELOAD(nkForceAmp, "nk/forceamp");
 
 	SAVELOAD(bMute, "audio/mute");
 	SAVELOAD(bDeaf, "audio/deaf");
