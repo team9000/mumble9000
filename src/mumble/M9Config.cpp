@@ -33,6 +33,7 @@ void M9Config::load(const Settings &r) {
 	loadCheckBox(qcbDisableTTS, r.nkDisableTTS);
 	loadCheckBox(qcbDisableSounds, r.nkDisableSounds);
 	loadCheckBox(qcbDisablePopups, r.nkDisablePopups);
+	loadCheckBox(qcbDisableAttenuate, r.nkDisableAttenuate);
 	loadCheckBox(qcbTrimLog, r.nkTrimLog);
 
 	loadCheckBox(qcbAudioEnable, r.nkAudioEnable);
@@ -50,6 +51,7 @@ void M9Config::save() const {
 	s.nkDisableTTS = qcbDisableTTS->isChecked();
 	s.nkDisableSounds = qcbDisableSounds->isChecked();
 	s.nkDisablePopups = qcbDisablePopups->isChecked();
+	s.nkDisableAttenuate = qcbDisableAttenuate->isChecked();
 	s.nkTrimLog = qcbTrimLog->isChecked();
 
 	s.nkAudioEnable = qcbAudioEnable->isChecked();

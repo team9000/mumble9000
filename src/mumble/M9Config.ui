@@ -79,6 +79,13 @@
        </widget>
       </item>
       <item>
+       <widget class="QCheckBox" name="qcbDisableAttenuate">
+        <property name="text">
+         <string>Disable Attenuation</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QCheckBox" name="qcbTrimLog">
         <property name="text">
          <string>Trim log to prevent text lag</string>

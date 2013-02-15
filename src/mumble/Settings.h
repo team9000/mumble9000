@@ -190,6 +190,7 @@ struct Settings {
 	bool nkDisableTTS;
 	bool nkDisableSounds;
 	bool nkDisablePopups;
+	bool nkDisableAttenuate;
 	bool nkTrimLog;
 
 	bool nkAudioEnable;

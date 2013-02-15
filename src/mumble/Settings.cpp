@@ -261,6 +261,7 @@ Settings::Settings() {
 	nkDisableTTS = true;
 	nkDisableSounds = true;
 	nkDisablePopups = true;
+	nkDisableAttenuate = true;
 	nkTrimLog = true;
 
 	nkAudioEnable = true;
@@ -557,6 +558,10 @@ void Settings::nkFixes() {
 	if(g.s.nkTrimLog) {
 		g.s.iMaxLogBlocks = 500;
 	}
+	if(g.s.nkDisableAttenuate) {
+		g.s.bAttenuateOthersOnTalk = false;
+		g.s.bAttenuateOthers = false;
+	}
 	if(g.s.nkAudioEnable) {
 		double maxAmp = 2.0;
 		double noiseSuppress = -30;
@@ -581,13 +586,11 @@ void Settings::nkFixes() {
 		g.s.iMinLoudness = 20000/maxAmp;
 		g.s.iNoiseSuppress = noiseSuppress;
 
-		g.s.bExclusiveInput = false;
 		g.s.iQuality = 96000;
 		g.s.iFramesPerPacket = 2; // must be 1, 2, 4, 6
-		
+
+		g.s.bExclusiveInput = false;
 		g.s.bExclusiveOutput = false;
-		g.s.bAttenuateOthersOnTalk = false;
-		g.s.bAttenuateOthers = false;
 	}
 }
 
@@ -609,6 +612,7 @@ void Settings::load(QSettings* settings_ptr) {
 	SAVELOAD(nkDisableTTS, "nk/disabletts");
 	SAVELOAD(nkDisableSounds, "nk/disablesounds");
 	SAVELOAD(nkDisablePopups, "nk/disablepopups");
+	SAVELOAD(nkDisableAttenuate, "nk/disableattenuate");
 	SAVELOAD(nkTrimLog, "nk/trimlog");
 
 	SAVELOAD(nkAudioEnable, "nk/audioenable");
@@ -912,6 +916,7 @@ void Settings::save() {
 	SAVELOAD(nkDisableTTS, "nk/disabletts");
 	SAVELOAD(nkDisableSounds, "nk/disablesounds");
 	SAVELOAD(nkDisablePopups, "nk/disablepopups");
+	SAVELOAD(nkDisableAttenuate, "nk/disableattenuate");
 	SAVELOAD(nkTrimLog, "nk/trimlog");
 
 	SAVELOAD(nkAudioEnable, "nk/audioenable");

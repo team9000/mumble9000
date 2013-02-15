@@ -1,1 +1,1 @@
-nmake release
+jom -j4 release

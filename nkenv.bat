@@ -1,11 +1,12 @@
 @echo off
 
-SET MumbleVersion=1.0.7
+SET MumbleVersion=1.0.8
 
 SET DIR=d:\mumble
 SET VSVER=10.0
 SET LIB=
 SET QT_DIR=%DIR%\qtmumble
+SET JOM_DIR=%DIR%\jom
 SET MUMBLE_DIR=%DIR%\mumble
 SET VLD_DIR=%DIR%\vld
 SET MYSQL_DIR=%DIR%\mysql
@@ -28,7 +29,7 @@ CALL "%TOOLCHAIN%\env.bat"
 ::Set Include=%DXSDK_DIR%\Include;%Include%
 SET DXSDK_DIR=%DXSDK_DIR%\
 CALL "%TOOLCHAIN%\VC\vcvarsall.bat" x86
-SET PATH=%TOOLCHAIN%\win8sdk\bin\x86;%GITBIN_DIR%;%PERLBIN_DIR%;%QT_DIR%\bin;%OPENSSL_DIR%\bin;%LIBSNDFILE_DIR%\bin;%MYSQL_DIR%\lib;%ICE_DIR%\bin\vc100;%PROTOBUF_DIR%\vsprojects\Release;%NASM_DIR%;%VLD_DIR%\bin;%PATH%
+SET PATH=%TOOLCHAIN%\win8sdk\bin\x86;%GITBIN_DIR%;%PERLBIN_DIR%;%QT_DIR%\bin;%JOM_DIR%;%OPENSSL_DIR%\bin;%LIBSNDFILE_DIR%\bin;%MYSQL_DIR%\lib;%ICE_DIR%\bin\vc100;%PROTOBUF_DIR%\vsprojects\Release;%NASM_DIR%;%VLD_DIR%\bin;%PATH%
 
 chdir /d %OLDDIR%
 TITLE Mumble Development Environment
