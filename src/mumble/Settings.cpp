@@ -251,15 +251,21 @@ Settings::Settings() {
 	qRegisterMetaTypeStreamOperators<ShortcutTarget> ("ShortcutTarget");
 	qRegisterMetaType<QVariant> ("QVariant");
 
+
 	// Mumble9000
-	nkRemoveNotifications = true;
 	nkRemoveNotificationsOnFocused = true;
+
+	nkRemoveNotifications = true;
 	nkInvertText = false;
-	nkFixAudio = true;
+
 	nkDisablePositional = true;
 	nkDisableOverlay = true;
-	nkEnableSuppression = true;
-	nkForceAmp = true;
+
+	nkAudioEnable = true;
+	nkAudioType = 0;
+	nkAudioNoise = 0;
+	nkAudioSpeakers = false;
+
 
 	atTransmit = VAD;
 	bTransmitPosition = false;
@@ -540,16 +546,6 @@ void OverlaySettings::load(QSettings* settings_ptr) {
 void Settings::nkFixes() {
 	g.s.iMaxLogBlocks = 500;
 	g.s.bUsage = false;
-	if(g.s.nkFixAudio) {
-		g.s.bEcho = false;
-		g.s.bExclusiveInput = false;
-		g.s.iQuality = 96000;
-		g.s.iFramesPerPacket = 3;
-		
-		g.s.bExclusiveOutput = false;
-		g.s.bAttenuateOthersOnTalk = false;
-		g.s.bAttenuateOthers = false;
-	}
 	if(g.s.nkDisablePositional) {
 		g.s.bPositionalAudio = false;
 		g.s.bPluginCheck = false;
@@ -557,12 +553,37 @@ void Settings::nkFixes() {
 	if(g.s.nkDisableOverlay) {
 		g.s.os.bEnable = false;
 	}
-	if(g.s.nkEnableSuppression) {
-		g.s.iNoiseSuppress = -30;
-	}
-	if(g.s.nkForceAmp) {
+	if(g.s.nkAudioEnable) {
 		double maxAmp = 2.0;
+		double noiseSuppress = -30;
+
+		if(g.s.nkAudioType == 1) {
+			maxAmp = 40.0;
+		}
+		if(g.s.nkAudioNoise == 1) {
+			noiseSuppress = -40;
+		} else if(g.s.nkAudioNoise == 2) {
+			noiseSuppress = -15;
+		}
+		
+		if(g.s.nkAudioSpeakers) {
+			g.s.bEcho = true;
+			g.s.bEchoMulti = true;
+		} else {
+			g.s.bEcho = false;
+			g.s.bEchoMulti = false;
+		}
+		
 		g.s.iMinLoudness = (20000*(maxAmp-1))/maxAmp;
+		g.s.iNoiseSuppress = noiseSuppress;
+
+		g.s.bExclusiveInput = false;
+		g.s.iQuality = 96000;
+		g.s.iFramesPerPacket = 2; // must be 1, 2, 4, 6
+		
+		g.s.bExclusiveOutput = false;
+		g.s.bAttenuateOthersOnTalk = false;
+		g.s.bAttenuateOthers = false;
 	}
 }
 
@@ -574,15 +595,21 @@ void Settings::load() {
 void Settings::load(QSettings* settings_ptr) {
 	// Config updates
 	SAVELOAD(uiUpdateCounter, "lastupdate");
-	
-	SAVELOAD(nkRemoveNotifications, "nk/removenotifications");
+
+
 	SAVELOAD(nkRemoveNotificationsOnFocused, "nk/removenotificationsonfocused");
+
+	SAVELOAD(nkRemoveNotifications, "nk/removenotifications");
 	SAVELOAD(nkInvertText, "nk/inverttext");
-	SAVELOAD(nkFixAudio, "nk/fixaudio");
+
 	SAVELOAD(nkDisablePositional, "nk/disablepos");
 	SAVELOAD(nkDisableOverlay, "nk/disableoverlay");
-	SAVELOAD(nkEnableSuppression, "nk/enablesuppression");
-	SAVELOAD(nkForceAmp, "nk/forceamp");
+
+	SAVELOAD(nkAudioEnable, "nk/audioenable");
+	LOADENUM(nkAudioType, "nk/audiotype");
+	LOADENUM(nkAudioNoise, "nk/audionoise");
+	SAVELOAD(nkAudioSpeakers, "nk/audiospeakers");
+
 
 	SAVELOAD(bMute, "audio/mute");
 	SAVELOAD(bDeaf, "audio/deaf");
@@ -869,15 +896,21 @@ void Settings::save() {
 
 	// Config updates
 	SAVELOAD(uiUpdateCounter, "lastupdate");
-	
-	SAVELOAD(nkRemoveNotifications, "nk/removenotifications");
+
+
 	SAVELOAD(nkRemoveNotificationsOnFocused, "nk/removenotificationsonfocused");
+
+	SAVELOAD(nkRemoveNotifications, "nk/removenotifications");
 	SAVELOAD(nkInvertText, "nk/inverttext");
-	SAVELOAD(nkFixAudio, "nk/fixaudio");
+
 	SAVELOAD(nkDisablePositional, "nk/disablepos");
 	SAVELOAD(nkDisableOverlay, "nk/disableoverlay");
-	SAVELOAD(nkEnableSuppression, "nk/enablesuppression");
-	SAVELOAD(nkForceAmp, "nk/forceamp");
+
+	SAVELOAD(nkAudioEnable, "nk/audioenable");
+	SAVELOAD(nkAudioType, "nk/audiotype");
+	SAVELOAD(nkAudioNoise, "nk/audionoise");
+	SAVELOAD(nkAudioSpeakers, "nk/audiospeakers");
+
 
 	SAVELOAD(bMute, "audio/mute");
 	SAVELOAD(bDeaf, "audio/deaf");

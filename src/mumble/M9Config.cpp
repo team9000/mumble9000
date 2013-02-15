@@ -25,25 +25,33 @@ QIcon M9Config::icon() const {
 }
 
 void M9Config::load(const Settings &r) {
-	loadCheckBox(qcbRemoveNotifications, r.nkRemoveNotifications);
 	loadCheckBox(qcbRemoveNotificationsOnFocused, r.nkRemoveNotificationsOnFocused);
+
+	loadCheckBox(qcbRemoveNotifications, r.nkRemoveNotifications);
 	loadCheckBox(qcbInvertText, r.nkInvertText);
-	loadCheckBox(qcbFixAudio, r.nkFixAudio);
+
 	loadCheckBox(qcbDisablePositional, r.nkDisablePositional);
 	loadCheckBox(qcbDisableOverlay, r.nkDisableOverlay);
-	loadCheckBox(qcbEnableSuppression, r.nkEnableSuppression);
-	loadCheckBox(qcbForceAmp, r.nkForceAmp);
+
+	loadCheckBox(qcbAudioEnable, r.nkAudioEnable);
+	loadComboBox(qcbAudioType, r.nkAudioType);
+	loadComboBox(qcbAudioNoise, r.nkAudioNoise);
+	loadCheckBox(qcbAudioSpeakers, r.nkAudioSpeakers);
 }
 
 void M9Config::save() const {
-	s.nkRemoveNotifications = qcbRemoveNotifications->isChecked();
 	s.nkRemoveNotificationsOnFocused = qcbRemoveNotificationsOnFocused->isChecked();
+
+	s.nkRemoveNotifications = qcbRemoveNotifications->isChecked();
 	s.nkInvertText = qcbInvertText->isChecked();
-	s.nkFixAudio = qcbFixAudio->isChecked();
+
 	s.nkDisablePositional = qcbDisablePositional->isChecked();
 	s.nkDisableOverlay = qcbDisableOverlay->isChecked();
-	s.nkEnableSuppression = qcbEnableSuppression->isChecked();
-	s.nkForceAmp = qcbForceAmp->isChecked();
+
+	s.nkAudioEnable = qcbAudioEnable->isChecked();
+	s.nkAudioType = qcbAudioType->currentIndex();
+	s.nkAudioNoise = qcbAudioNoise->currentIndex();
+	s.nkAudioSpeakers = qcbAudioSpeakers->isChecked();
 }
 
 void M9Config::accept() const {

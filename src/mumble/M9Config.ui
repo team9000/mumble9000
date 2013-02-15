@@ -15,6 +15,22 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>Mumble9000 Features</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <widget class="QCheckBox" name="qcbRemoveNotificationsOnFocused">
+        <property name="text">
+         <string>Disable TTS, Popups, and Notification Sounds WHEN WINDOW IS FOCUSED</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <widget class="QGroupBox" name="qgbConnection">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
@@ -23,20 +39,13 @@
       </sizepolicy>
      </property>
      <property name="title">
-      <string>Mumble9000 Functionality</string>
+      <string>Team9000 Server Features</string>
      </property>
      <layout class="QVBoxLayout">
       <item>
        <widget class="QCheckBox" name="qcbRemoveNotifications">
         <property name="text">
          <string>Disable TTS, Popups, and Notification Sounds ON TEAM9000</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QCheckBox" name="qcbRemoveNotificationsOnFocused">
-        <property name="text">
-         <string>Disable TTS, Popups, and Notification Sounds WHEN WINDOW IS FOCUSED</string>
         </property>
        </widget>
       </item>
@@ -51,24 +60,11 @@
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="qgbConnection">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
+    <widget class="QGroupBox" name="groupBox_2">
      <property name="title">
-      <string>These settings OVERRIDE the settings you set elsewhere</string>
+      <string>Disable Extra Mumble Features</string>
      </property>
-     <layout class="QVBoxLayout">
-      <item>
-       <widget class="QCheckBox" name="qcbFixAudio">
-        <property name="text">
-         <string>Increase voice quality and ensure voice settings aren't foobared</string>
-        </property>
-       </widget>
-      </item>
+     <layout class="QVBoxLayout" name="verticalLayout_3">
       <item>
        <widget class="QCheckBox" name="qcbDisablePositional">
         <property name="text">
@@ -83,30 +79,125 @@
         </property>
        </widget>
       </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="qgbConnection">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="title">
+      <string>Audio Quality Improvements</string>
+     </property>
+     <layout class="QVBoxLayout">
       <item>
-       <widget class="QCheckBox" name="qcbEnableSuppression">
+       <widget class="QCheckBox" name="qcbAudioEnable">
         <property name="text">
-         <string>Enable Noise Suppression at -30dB</string>
+         <string>Enable</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QCheckBox" name="qcbForceAmp">
-        <property name="text">
-         <string>Set max amplification to 1.00</string>
-        </property>
-       </widget>
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <spacer name="spacer_2">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Fixed</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>0</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <layout class="QGridLayout" name="gridLayout" columnstretch="1,2">
+          <item row="1" column="1">
+           <widget class="QComboBox" name="qcbAudioNoise">
+            <item>
+             <property name="text">
+              <string>Medium Noise</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>High Noise</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Silent Background</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_2">
+            <property name="text">
+             <string>Do you use speakers?</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label">
+            <property name="text">
+             <string>Type of microphone</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QCheckBox" name="qcbAudioSpeakers">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="qcbAudioType">
+            <item>
+             <property name="text">
+              <string>Standard Microphone / Headset</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Quiet Microphone</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>High Quality / Condenser Microphone</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_4">
+            <property name="text">
+             <string>Amount of background noise</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
       </item>
      </layout>
     </widget>
    </item>
    <item>
-    <spacer>
+    <spacer name="spacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeType">
-      <enum>QSizePolicy::Expanding</enum>
      </property>
      <property name="sizeHint" stdset="0">
       <size>

@@ -421,11 +421,10 @@ void Log::log(MsgType mt, const QString &console, const QString &terse, bool own
 	}
 
 	QString plain = QTextDocumentFragment::fromHtml(console).toPlainText();
-
-	quint32 flags = g.s.qmMessages.value(mt);
-	
 	QString out = console;
+	bool noTimestamp = false;
 	if(g.isTeam9000()) {
+		plain = QLatin1String("");
 		if(mt == Log::TextMessage && out.startsWith(tr("To ")))
 			return;
 		if(
@@ -438,23 +437,42 @@ void Log::log(MsgType mt, const QString &console, const QString &terse, bool own
 		) return;
 		
 		if(mt == Log::TextMessage) {
+			noTimestamp = true;
+
 			QString time = dt.time().toString(QLatin1String("H:mm"));
 			out = out.replace(QLatin1String("```TIME```"), time);
 			
 			QString textColor = QLatin1String("black");
 			if(g.s.nkInvertText) textColor = QLatin1String("white");
 			out = out.replace(QLatin1String("```COLOR```"), textColor);
-			
-			QRegExp rx(QLatin1String("(.*)```PLAINa```(.*)```PLAINb```(.*)"));
+
+			QRegExp rx(QLatin1String("^```TYPE ([\\d]+)```(.*)"));
 			if(rx.indexIn(out) != -1) {
-				plain = rx.cap(2);
-				out = rx.cap(1)+rx.cap(3);
+				int type = rx.cap(1).toInt();
+				if(type < 0) return;
+				if(type > Log::TextMessage) return;
+				mt = static_cast<Log::MsgType>(type);
+				out = rx.cap(2);
+			}
+			
+			QRegExp rx2(QLatin1String("^```PLAIN```(.*)"));
+			if(rx2.indexIn(out) != -1) {
+				plain = rx2.cap(1);
+				out = QLatin1String("");
+			}
+			
+			if(out.startsWith(QLatin1String("`"))) {
+				// protect against future meta data
+				// that we don't want to show
+				return;
 			}
 		}
 	}
 
+	quint32 flags = g.s.qmMessages.value(mt);
+
 	// Message output on console
-	if ((flags & Settings::LogConsole)) {
+	if ((flags & Settings::LogConsole) && out != QLatin1String("")) {
 		QTextCursor tc = g.mw->qteLog->textCursor();
 
 		LogTextBrowser *tlog = g.mw->qteLog;
@@ -483,7 +501,7 @@ void Log::log(MsgType mt, const QString &console, const QString &terse, bool own
 			tc.insertBlock();
 		}
 
-		if(mt != Log::TextMessage || !g.isTeam9000())
+		if(!noTimestamp)
 			tc.insertHtml(Log::msgColor(QString::fromLatin1("[%1] ").arg(dt.time().toString(Qt::DefaultLocaleShortDate)), Log::Time));
 
 		validHtml(out, true, &tc);
@@ -496,6 +514,9 @@ void Log::log(MsgType mt, const QString &console, const QString &terse, bool own
 			tlog->setLogScroll(oldscrollvalue);
 	}
 	
+	if(plain == QLatin1String("")) {
+		return;
+	}
 	if(g.isTeam9000()) {
 		if(g.s.nkRemoveNotifications) {
 			// disable TTS, desktop notifications, and sounds

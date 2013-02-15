@@ -670,16 +670,6 @@ void Server::msgUserState(ServerUser *uSource, MumbleProto::UserState &msg) {
 
 	if (msg.has_recording() && (pDstServerUser->bRecording != msg.recording())) {
 		pDstServerUser->bRecording = msg.recording();
-
-		MumbleProto::TextMessage mptm;
-		mptm.add_tree_id(0);
-		if (pDstServerUser->bRecording)
-			mptm.set_message(u8(QString(QLatin1String("User '%1' started recording")).arg(pDstServerUser->qsName)));
-		else
-			mptm.set_message(u8(QString(QLatin1String("User '%1' stopped recording")).arg(pDstServerUser->qsName)));
-
-		sendAll(mptm, ~ 0x010203);
-
 		bBroadcast = true;
 	}
 
