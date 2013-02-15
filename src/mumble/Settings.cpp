@@ -254,12 +254,14 @@ Settings::Settings() {
 
 	// Mumble9000
 	nkRemoveNotificationsOnFocused = true;
-
-	nkRemoveNotifications = true;
 	nkInvertText = false;
 
 	nkDisablePositional = true;
 	nkDisableOverlay = true;
+	nkDisableTTS = true;
+	nkDisableSounds = true;
+	nkDisablePopups = true;
+	nkTrimLog = true;
 
 	nkAudioEnable = true;
 	nkAudioType = 0;
@@ -544,7 +546,6 @@ void OverlaySettings::load(QSettings* settings_ptr) {
 }
 
 void Settings::nkFixes() {
-	g.s.iMaxLogBlocks = 500;
 	g.s.bUsage = false;
 	if(g.s.nkDisablePositional) {
 		g.s.bPositionalAudio = false;
@@ -552,6 +553,9 @@ void Settings::nkFixes() {
 	}
 	if(g.s.nkDisableOverlay) {
 		g.s.os.bEnable = false;
+	}
+	if(g.s.nkTrimLog) {
+		g.s.iMaxLogBlocks = 500;
 	}
 	if(g.s.nkAudioEnable) {
 		double maxAmp = 2.0;
@@ -574,7 +578,7 @@ void Settings::nkFixes() {
 			g.s.bEchoMulti = false;
 		}
 		
-		g.s.iMinLoudness = (20000*(maxAmp-1))/maxAmp;
+		g.s.iMinLoudness = 20000/maxAmp;
 		g.s.iNoiseSuppress = noiseSuppress;
 
 		g.s.bExclusiveInput = false;
@@ -598,12 +602,14 @@ void Settings::load(QSettings* settings_ptr) {
 
 
 	SAVELOAD(nkRemoveNotificationsOnFocused, "nk/removenotificationsonfocused");
-
-	SAVELOAD(nkRemoveNotifications, "nk/removenotifications");
 	SAVELOAD(nkInvertText, "nk/inverttext");
 
 	SAVELOAD(nkDisablePositional, "nk/disablepos");
 	SAVELOAD(nkDisableOverlay, "nk/disableoverlay");
+	SAVELOAD(nkDisableTTS, "nk/disabletts");
+	SAVELOAD(nkDisableSounds, "nk/disablesounds");
+	SAVELOAD(nkDisablePopups, "nk/disablepopups");
+	SAVELOAD(nkTrimLog, "nk/trimlog");
 
 	SAVELOAD(nkAudioEnable, "nk/audioenable");
 	LOADENUM(nkAudioType, "nk/audiotype");
@@ -899,12 +905,14 @@ void Settings::save() {
 
 
 	SAVELOAD(nkRemoveNotificationsOnFocused, "nk/removenotificationsonfocused");
-
-	SAVELOAD(nkRemoveNotifications, "nk/removenotifications");
 	SAVELOAD(nkInvertText, "nk/inverttext");
 
 	SAVELOAD(nkDisablePositional, "nk/disablepos");
 	SAVELOAD(nkDisableOverlay, "nk/disableoverlay");
+	SAVELOAD(nkDisableTTS, "nk/disabletts");
+	SAVELOAD(nkDisableSounds, "nk/disablesounds");
+	SAVELOAD(nkDisablePopups, "nk/disablepopups");
+	SAVELOAD(nkTrimLog, "nk/trimlog");
 
 	SAVELOAD(nkAudioEnable, "nk/audioenable");
 	SAVELOAD(nkAudioType, "nk/audiotype");

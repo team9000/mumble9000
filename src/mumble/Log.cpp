@@ -517,39 +517,36 @@ void Log::log(MsgType mt, const QString &console, const QString &terse, bool own
 	if(plain == QLatin1String("")) {
 		return;
 	}
-	if(g.isTeam9000()) {
-		if(g.s.nkRemoveNotifications) {
-			// disable TTS, desktop notifications, and sounds
-			return;
-		}
-	}
 	if(g.s.nkRemoveNotificationsOnFocused && qApp->activeWindow() != 0) {
 		return;
 	}
-
 	if (!g.s.bTTSMessageReadBack && ownMessage)
 		return;
 
 	// Message notification with balloon tooltips
-	if ((flags & Settings::LogBalloon) && !(g.mw->isActiveWindow() && g.mw->qdwLog->isVisible()))
-		postNotification(mt, console, plain);
+	if(!g.s.nkDisablePopups) {
+		if ((flags & Settings::LogBalloon) && !(g.mw->isActiveWindow() && g.mw->qdwLog->isVisible()))
+			postNotification(mt, console, plain);
+	}
 
 	// Don't make any noise if we are self deafened
 	if (g.s.bDeaf)
 		return;
 
 	// Message notification with static sounds
-	if ((flags & Settings::LogSoundfile)) {
-		QString sSound = g.s.qmMessageSounds.value(mt);
-		AudioOutputPtr ao = g.ao;
-		if (!ao || !ao->playSample(sSound, false)) {
-			qWarning() << "Sound file" << sSound << "is not a valid audio file, fallback to TTS.";
-			flags ^= Settings::LogSoundfile | Settings::LogTTS; // Fallback to TTS
+	if(!g.s.nkDisableSounds) {
+		if ((flags & Settings::LogSoundfile)) {
+			QString sSound = g.s.qmMessageSounds.value(mt);
+			AudioOutputPtr ao = g.ao;
+			if (!ao || !ao->playSample(sSound, false)) {
+				qWarning() << "Sound file" << sSound << "is not a valid audio file, fallback to TTS.";
+				flags ^= Settings::LogSoundfile | Settings::LogTTS; // Fallback to TTS
+			}
 		}
 	}
 
 	// Message notification with Text-To-Speech
-	if (! g.s.bTTS || !(flags & Settings::LogTTS))
+	if (! g.s.bTTS || !(flags & Settings::LogTTS) || g.s.nkDisableTTS)
 		return;
 
 	// Apply simplifications to spoken text

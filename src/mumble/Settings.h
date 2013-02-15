@@ -183,12 +183,14 @@ struct Settings {
 	void nkFixes();
 
 	bool nkRemoveNotificationsOnFocused;
-
-	bool nkRemoveNotifications;
 	bool nkInvertText;
 
 	bool nkDisablePositional;
 	bool nkDisableOverlay;
+	bool nkDisableTTS;
+	bool nkDisableSounds;
+	bool nkDisablePopups;
+	bool nkTrimLog;
 
 	bool nkAudioEnable;
 	int nkAudioType;

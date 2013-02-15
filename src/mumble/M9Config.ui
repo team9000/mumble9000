@@ -23,36 +23,14 @@
       <item>
        <widget class="QCheckBox" name="qcbRemoveNotificationsOnFocused">
         <property name="text">
-         <string>Disable TTS, Popups, and Notification Sounds WHEN WINDOW IS FOCUSED</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <widget class="QGroupBox" name="qgbConnection">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="title">
-      <string>Team9000 Server Features</string>
-     </property>
-     <layout class="QVBoxLayout">
-      <item>
-       <widget class="QCheckBox" name="qcbRemoveNotifications">
-        <property name="text">
-         <string>Disable TTS, Popups, and Notification Sounds ON TEAM9000</string>
+         <string>Disable TTS, Popups, and Notification Sounds when window is focused</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QCheckBox" name="qcbInvertText">
         <property name="text">
-         <string>Invert text color (for dark skins) ON TEAM9000</string>
+         <string>Invert text color on Team9000 (for dark skins)</string>
         </property>
        </widget>
       </item>
@@ -76,6 +54,34 @@
        <widget class="QCheckBox" name="qcbDisableOverlay">
         <property name="text">
          <string>Disable Overlay</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="qcbDisableTTS">
+        <property name="text">
+         <string>Disable Text-To-Speech</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="qcbDisableSounds">
+        <property name="text">
+         <string>Disable Notification Sounds</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="qcbDisablePopups">
+        <property name="text">
+         <string>Disable Notification Popups</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="qcbTrimLog">
+        <property name="text">
+         <string>Trim log to prevent text lag</string>
         </property>
        </widget>
       </item>
