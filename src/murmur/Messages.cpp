@@ -519,6 +519,7 @@ void Server::msgUserState(ServerUser *uSource, MumbleProto::UserState &msg) {
 		if (msg.has_mute() || msg.has_deaf() || msg.has_suppress() || msg.has_priority_speaker()) {
 			// nobody has access to this
 			PERM_DENIED_TYPE(SuperUser);
+			return;
 		}
 
 		if (msg.has_comment()) {
