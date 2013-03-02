@@ -24,7 +24,7 @@ SET CODESIGN_CERT=d:\jenkins\secure\code.p12
 
 SET DXSDK_DIR=%TOOLCHAIN%\dxsdk\
 SET WindowsSDKDir=%TOOLCHAIN%\win8sdk
-CALL "%TOOLCHAIN%\mcvs2010\VC\vcvarsall.bat" x86
+CALL "%WindowsSDKDir%\bin\SetEnv.cmd"
 SET PATH=%TOOLCHAIN%\win8sdk\bin\x86;%GITBIN_DIR%;%PERLBIN_DIR%;%QT_DIR%\bin;%JOM_DIR%;%OPENSSL_DIR%\bin;%LIBSNDFILE_DIR%\bin;%MYSQL_DIR%\lib;%ICE_DIR%\bin\vc100;%PROTOBUF_DIR%\vsprojects\Release;%NASM_DIR%;%VLD_DIR%\bin;%PATH%
 
 TITLE Mumble Development Environment
