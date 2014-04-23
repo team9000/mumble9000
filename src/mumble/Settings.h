@@ -29,8 +29,8 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef SETTINGS_H_
-#define SETTINGS_H_
+#ifndef MUMBLE_MUMBLE_SETTINGS_H_
+#define MUMBLE_MUMBLE_SETTINGS_H_
 
 #include <QtCore/QVariant>
 #include <QtCore/QList>
@@ -44,7 +44,7 @@
 #include <QtNetwork/QSslKey>
 
 // Global helper classes to spread variables around across threads
-// especially helpfull to initialize things like the stored
+// especially helpful to initialize things like the stored
 // preference for audio transmission, since the GUI elements
 // will be created long before the AudioInput object, and the
 // latter lives in a separate thread and so cannot touch the
@@ -124,6 +124,7 @@ struct OverlaySettings {
 	bool bAvatar;
 	bool bBox;
 	bool bFps;
+	bool bTime;
 
 	qreal fUserName;
 	qreal fChannel;
@@ -137,6 +138,7 @@ struct OverlaySettings {
 	QRectF qrfMutedDeafened;
 	QRectF qrfAvatar;
 	QRectF qrfFps;
+	QRectF qrfTime;
 
 	Qt::Alignment qaUserName;
 	Qt::Alignment qaChannel;
@@ -221,6 +223,7 @@ struct Settings {
 	float fOtherVolume;
 	bool bAttenuateOthersOnTalk;
 	bool bAttenuateOthers;
+	bool bAttenuateUsersOnPrioritySpeak;
 	int iOutputDelay;
 
 	QString qsALSAInput, qsALSAOutput;
@@ -276,6 +279,8 @@ struct Settings {
 	bool bUsage;
 	bool bShowUserCount;
 	bool bChatBarUseSelection;
+	bool bFilterHidesEmptyChannels;
+	bool bFilterActive;
 	QByteArray qbaConnectDialogHeader, qbaConnectDialogGeometry;
 	bool bShowContextMenuInMenuBar;
 
@@ -320,9 +325,17 @@ struct Settings {
 	RecordingMode rmRecordingMode;
 	int iRecordingFormat;
 
-	// Codec kill-switch
+	// Special configuration options not exposed to UI
+	
+	/// Codec kill-switch
 	bool bDisableCELT;
-
+	
+	/// Disables the "Public Internet" section in the connect dialog if set.
+	bool disablePublicList;
+	
+	/// Removes the add and edit options in the connect dialog if set.
+	bool disableConnectDialogEditing;
+	
 	// Config updates
 	unsigned int uiUpdateCounter;
 

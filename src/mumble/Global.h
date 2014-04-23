@@ -29,8 +29,8 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef GLOBAL_H_
-#define GLOBAL_H_
+#ifndef MUMBLE_MUMBLE_GLOBAL_H_
+#define MUMBLE_MUMBLE_GLOBAL_H_
 
 #include <boost/shared_ptr.hpp>
 #include <QtCore/QDir>
@@ -97,6 +97,9 @@ public:
 	bool bPreferAlpha;
 	bool bOpus;
 	bool bAttenuateOthers;
+	/// If set the AudioOutput::mix will forcefully adjust the volume of all
+	/// non-priority speakers.
+	bool prioritySpeakerActiveOverride;
 	bool bAllowHTML;
 	unsigned int uiMessageLength;
 	unsigned int uiImageLength;

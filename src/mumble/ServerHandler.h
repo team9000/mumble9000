@@ -28,14 +28,16 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef SERVERHANDLER_H_
-#define SERVERHANDLER_H_
+#ifndef MUMBLE_MUMBLE_SERVERHANDLER_H_
+#define MUMBLE_MUMBLE_SERVERHANDLER_H_
 
-#include <boost/accumulators/accumulators.hpp>
-#include <boost/accumulators/statistics/stats.hpp>
-#include <boost/accumulators/statistics/mean.hpp>
-#include <boost/accumulators/statistics/variance.hpp>
-#include <boost/shared_ptr.hpp>
+#ifndef Q_MOC_RUN
+# include <boost/accumulators/accumulators.hpp>
+# include <boost/accumulators/statistics/stats.hpp>
+# include <boost/accumulators/statistics/mean.hpp>
+# include <boost/accumulators/statistics/variance.hpp>
+# include <boost/shared_ptr.hpp>
+#endif
 
 #include <QtCore/QEvent>
 #include <QtCore/QMutex>
@@ -128,7 +130,6 @@ class ServerHandler : public QThread {
 		void requestUserStats(unsigned int uiSession, bool statsOnly);
 		void joinChannel(unsigned int channel);
 		void createChannel(unsigned int parent_, const QString &name, const QString &description, unsigned int position, bool temporary);
-		void setTexture(const QByteArray &qba);
 		void requestBanList();
 		void requestUserList();
 		void requestACL(unsigned int channel);
@@ -137,6 +138,7 @@ class ServerHandler : public QThread {
 		void sendUserTextMessage(unsigned int uiSession, const QString &message_);
 		void sendChannelTextMessage(unsigned int channel, const QString &message_, bool tree);
 		void setUserComment(unsigned int uiSession, const QString &comment);
+		void setUserTexture(unsigned int uiSession, const QByteArray &qba);
 		void removeChannel(unsigned int channel);
 		void addChannelLink(unsigned int channel, unsigned int link);
 		void removeChannelLink(unsigned int channel, unsigned int link);

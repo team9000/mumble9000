@@ -28,33 +28,47 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef FILEENGINE_H_
-#define FILEENGINE_H_
+#ifndef MUMBLE_MUMBLE_OVERLAYEDITOR_H_
+#define MUMBLE_MUMBLE_OVERLAYEDITOR_H_
 
-class MumbleFileEngineHandler : public QAbstractFileEngineHandler {
-	private:
-		Q_DISABLE_COPY(MumbleFileEngineHandler)
-	public:
-		MumbleFileEngineHandler();
-		QAbstractFileEngine *create(const QString &) const;
-};
+#include "OverlayEditorScene.h"
+#include "ui_OverlayEditor.h"
 
-class MumbleImageFileEngine : public QAbstractFileEngine {
+struct OverlaySettings;
+
+class OverlayEditor : public QDialog, public Ui::OverlayEditor {
 	private:
-		Q_DISABLE_COPY(MumbleImageFileEngine)
+		Q_OBJECT
+		Q_DISABLE_COPY(OverlayEditor)
 	protected:
-		QBuffer qbData;
-		QUrl quUrl;
-		QStringList qslPath;
+		QGraphicsItem *qgiPromote;
+		OverlayEditorScene oes;
+		OverlaySettings *os;
+
+		void enterEvent(QEvent *);
+		void leaveEvent(QEvent *);
 	public:
-		MumbleImageFileEngine(const QUrl &);
-		bool open(QIODevice::OpenMode);
-		bool close();
-		bool seek(qint64 offset);
-		qint64 pos() const;
-		qint64 size() const;
-		qint64 read(char *data, qint64 maxlen);
-		QString fileName(QAbstractFileEngine::FileName) const;
+		OverlayEditor(QWidget *p = NULL, QGraphicsItem *qgi = NULL, OverlaySettings *osptr = NULL);
+		~OverlayEditor();
+	signals:
+		void applySettings();
+	public slots:
+		void reset();
+		void apply();
+		void accept();
+
+		void on_qrbPassive_clicked();
+		void on_qrbTalking_clicked();
+		void on_qrbWhisper_clicked();
+		void on_qrbShout_clicked();
+
+		void on_qcbAvatar_clicked();
+		void on_qcbUser_clicked();
+		void on_qcbChannel_clicked();
+		void on_qcbMutedDeafened_clicked();
+		void on_qcbBox_clicked();
+
+		void on_qsZoom_valueChanged(int);
 };
 
 #endif

@@ -28,12 +28,13 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef _MUMBLE_PLUGIN_WIN32_H
-#define _MUMBLE_PLUGIN_WIN32_H
+#ifndef MUMBLE_MUMBLE_PLUGIN_WIN32_H_
+#define MUMBLE_MUMBLE_PLUGIN_WIN32_H_
 
 #define _USE_MATH_DEFINES
 #include <stdio.h>
 #include <stdlib.h>
+#define NOMINMAX
 #include <windows.h>
 #include <tlhelp32.h>
 #include <math.h>

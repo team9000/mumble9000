@@ -28,8 +28,8 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef OSINFO_H_
-#define OSINFO_H_
+#ifndef MUMBLE_OSINFO_H_
+#define MUMBLE_OSINFO_H_
 
 class QDomDocument;
 class QDomElement;
@@ -39,6 +39,7 @@ class OSInfo {
 		static QString getMacHash(const QList<QHostAddress> & = QList<QHostAddress>());
 		static QString getOS();
 		static QString getOSVersion();
+		static QString getOSDisplayableVersion();
 		static void fillXml(QDomDocument &doc, QDomElement &root, const QString &os = OSInfo::getOS(), const QString &osver = OSInfo::getOSVersion(), const QList<QHostAddress> & = QList<QHostAddress>());
 };
 

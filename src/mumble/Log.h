@@ -29,8 +29,8 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef LOG_H_
-#define LOG_H_
+#ifndef MUMBLE_MUMBLE_LOG_H_
+#define MUMBLE_MUMBLE_LOG_H_
 
 #include <QtCore/QDate>
 #include <QtGui/QTextCursor>
@@ -94,7 +94,7 @@ class Log : public QObject {
 		static QString imageToImg(const QByteArray &format, const QByteArray &image);
 		static QString imageToImg(QImage img);
 		static QString msgColor(const QString &text, LogColorType t);
-		static QString formatClientUser(ClientUser *cu, LogColorType t);
+		static QString formatClientUser(ClientUser *cu, LogColorType t, const QString &displayName=QString());
 		static QString formatChannel(::Channel *c);
 	public slots:
 		void log(MsgType t, const QString &console, const QString &terse=QString(), bool ownMessage = false);

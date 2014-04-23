@@ -31,8 +31,10 @@
 
 #include "mumble_pch.hpp"
 #import <ScriptingBridge/ScriptingBridge.h>
+#import <Cocoa/Cocoa.h>
 #include <Carbon/Carbon.h>
-#include "Overlay.h"
+#include "OverlayConfig.h"
+#include "OverlayClient.h"
 #include "Global.h"
 #include "MainWindow.h"
 
@@ -208,10 +210,12 @@ void OverlayClient::updateMouse() {
 			}
 		}
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
 		if (cgimg) {
 			pm = QPixmap::fromMacCGImageRef(cgimg);
 			qmCursors.insert(csShape, pm);
 		}
+#endif
 	}
 
 	NSPoint p = [cursor hotSpot];

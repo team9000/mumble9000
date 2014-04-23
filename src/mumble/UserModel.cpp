@@ -235,6 +235,7 @@ UserModel::UserModel(QObject *p) : QAbstractItemModel(p) {
 	qiFriend=QIcon(QLatin1String("skin:emblems/emblem-favorite.svg"));
 	qiComment=QIcon(QLatin1String("skin:comment.svg"));
 	qiCommentSeen=QIcon(QLatin1String("skin:comment_seen.svg"));
+	qiFilter=QIcon(QLatin1String("skin:filter.svg"));
 
 	ModelItem::bUsersTop = g.s.bUserTop;
 
@@ -439,6 +440,7 @@ QVariant UserModel::data(const QModelIndex &idx, int role) const {
 					}
 					return qiChannel;
 				}
+				break;
 			case Qt::DisplayRole:
 				if (idx.column() == 0) {
 					if (! g.s.bShowUserCount || item->iUsers == 0)
@@ -448,6 +450,10 @@ QVariant UserModel::data(const QModelIndex &idx, int role) const {
 				}
 				if (! c->qbaDescHash.isEmpty())
 					l << (item->bCommentSeen ? qiCommentSeen : qiComment);
+
+				if (c->bFiltered)
+					l << (qiFilter);
+
 				return l;
 			case Qt::FontRole:
 				if (g.uiSession) {
@@ -519,11 +525,15 @@ QVariant UserModel::otherRoles(const QModelIndex &idx, int role) const {
 									qb.open(QIODevice::ReadOnly);
 									QImageReader qir(&qb, p->qbaTextureFormat);
 									QSize sz = qir.size();
-									if (sz.width() > 128) {
-										int targ = sz.width() / ((sz.width()+127)/ 128);
-										qsImage = QString::fromLatin1("<img src=\"memoryblob://avatar/%1/texture.%2\" width=\"%3\" />").arg(p->uiSession).arg(QString::fromLatin1(p->qbaTextureFormat).toLower()).arg(targ);
-									} else if (sz.width() > 0) {
-										qsImage = QString::fromLatin1("<img src=\"memoryblob://avatar/%1/texture.%2\" />").arg(p->uiSession).arg(QString::fromLatin1(p->qbaTextureFormat).toLower());
+									if (sz.width() > 0) {
+										qsImage = QString::fromLatin1("<img src=\"data:;base64,");
+										qsImage.append(QString::fromLatin1(p->qbaTexture.toBase64().toPercentEncoding()));
+										if (sz.width() > 128) {
+											int targ = sz.width() / ((sz.width()+127)/ 128);
+											qsImage.append(QString::fromLatin1("\" width=\"%1\" />").arg(targ));
+										} else {
+											qsImage.append(QString::fromLatin1("\" />"));
+										}
 									}
 								}
 							}
@@ -627,20 +637,22 @@ QVariant UserModel::otherRoles(const QModelIndex &idx, int role) const {
 						                                           tr("Muted (not allowed to speak in current channel)"),
 						                                           tr("Muted (muted by you, only on your machine)")
 						                                          ).arg(
-						           tr("Deafened (by self)"),
-						           tr("Deafened (by admin)"),
-						           tr("User has a new comment set (click to show)"),
-						           tr("User has a comment set, which you've already seen. (click to show)"),
-						           tr("Ignoring Text Messages")
-						       );
+						                                           tr("Deafened (by self)"),
+						                                           tr("Deafened (by admin)"),
+						                                           tr("User has a new comment set (click to show)"),
+						                                           tr("User has a comment set, which you've already seen. (click to show)"),
+						                                           tr("Ignoring Text Messages")
+						);
 					else
 						return QString::fromLatin1("%1"
 						                           "<table>"
 						                           "<tr><td><img src=\"skin:comment.svg\" width=64 /></td><td valign=\"middle\">%10</td></tr>"
 						                           "<tr><td><img src=\"skin:comment_seen.svg\" width=64 /></td><td valign=\"middle\">%11</td></tr>"
+						                           "<tr><td><img src=\"skin:filter.svg\" width=64 /></td><td valign=\"middle\">%12</td></tr>"
 						                           "</table>").arg(tr("This shows the flags the channel has, if any:"),
 						                                           tr("Channel has a new comment set (click to show)"),
-						                                           tr("Channel has a comment set, which you've already seen. (click to show)")
+						                                           tr("Channel has a comment set, which you've already seen. (click to show)"),
+						                                           tr("Channel will be hidden when filtering is enabled")
 						                                          );
 
 			}
@@ -843,8 +855,10 @@ ClientUser *UserModel::addUser(unsigned int id, const QString &name) {
 
 	ModelItem *item = new ModelItem(p);
 
-	connect(p, SIGNAL(talkingChanged()), this, SLOT(userTalkingChanged()));
-	connect(p, SIGNAL(muteDeafChanged()), this, SLOT(userMuteDeafChanged()));
+	connect(p, SIGNAL(talkingStateChanged()), this, SLOT(userStateChanged()));
+	connect(p, SIGNAL(muteDeafStateChanged()), this, SLOT(userStateChanged()));
+	connect(p, SIGNAL(prioritySpeakerStateChanged()), this, SLOT(userStateChanged()));
+	connect(p, SIGNAL(recordingStateChanged()), this, SLOT(userStateChanged()));
 
 	Channel *c = Channel::get(0);
 	ModelItem *citem = ModelItem::c_qhChannels.value(c);
@@ -1291,18 +1305,27 @@ Channel *UserModel::getSubChannel(Channel *p, int idx) const {
 	return NULL;
 }
 
-void UserModel::userTalkingChanged() {
-	ClientUser *p=static_cast<ClientUser *>(sender());
-	if (!p)
+void UserModel::userStateChanged() {
+	ClientUser *user = qobject_cast<ClientUser *>(sender());
+	if (user == NULL)
 		return;
-	QModelIndex idx = index(p);
+	
+	const QModelIndex idx = index(user);
 	emit dataChanged(idx, idx);
+	
 	updateOverlay();
 }
 
-void UserModel::userMuteDeafChanged() {
-	ClientUser *p=static_cast<ClientUser *>(sender());
-	QModelIndex idx = index(p);
+void UserModel::toggleChannelFiltered(Channel *c) {
+	QModelIndex idx;
+	if(c) {
+		c->bFiltered = !c->bFiltered;
+
+		ServerHandlerPtr sh = g.sh;
+		Database::setChannelFiltered(sh->qbaDigest, c->iId, c->bFiltered);
+		idx = index(c);
+	}
+
 	emit dataChanged(idx, idx);
 
 	updateOverlay();
@@ -1394,6 +1417,7 @@ bool UserModel::dropMimeData(const QMimeData *md, Qt::DropAction, int row, int c
 				break;
 			default:
 				g.l->log(Log::CriticalError, MainWindow::tr("Unknown Channel Drag mode in UserModel::dropMimeData."));
+				return false;
 				break;
 		}
 

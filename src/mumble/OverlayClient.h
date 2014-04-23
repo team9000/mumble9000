@@ -28,69 +28,82 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "mumble_pch.hpp"
+#ifndef MUMBLE_MUMBLE_OVERLAYCLIENT_H_
+#define MUMBLE_MUMBLE_OVERLAYCLIENT_H_
 
-#include "FileEngine.h"
+#include <QtCore/QUrl>
+#include <QtNetwork/QLocalSocket>
 
-#include "ClientUser.h"
-#include "Global.h"
+#include "Timer.h"
+#include "../../overlay/overlay.h"
+#include "SharedMemory.h"
+#include "OverlayUserGroup.h"
 
-MumbleFileEngineHandler::MumbleFileEngineHandler() : QAbstractFileEngineHandler() {
-}
+class ClientUser;
+class Overlay;
+class QLibrary;
+class QLocalServer;
 
-QAbstractFileEngine *MumbleFileEngineHandler::create(const QString &name) const {
-	QUrl url(name);
+class OverlayClient : public QObject {
+		friend class Overlay;
+	private:
+		Q_OBJECT
+		Q_DISABLE_COPY(OverlayClient)
+	protected:
+		OverlayMsg omMsg;
+		QLocalSocket *qlsSocket;
+		SharedMemory2 *smMem;
+		QRect qrLast;
+		Timer t;
 
-	if (url.scheme() == QLatin1String("memoryblob"))
-		return new MumbleImageFileEngine(url);
+		unsigned int fFps;
+		int iOffsetX, iOffsetY;
+		QGraphicsPixmapItem *qgpiCursor;
+		QGraphicsPixmapItem *qgpiLogo;
+		QGraphicsPixmapItem *qgpiFPS;
+		QGraphicsPixmapItem *qgpiTime;
 
-	return NULL;
-}
+		/// The process ID of the processing displaying an overlay.
+		quint64 uiPid;
+		QGraphicsScene qgs;
+		OverlayUserGroup ougUsers;
 
-MumbleImageFileEngine::MumbleImageFileEngine(const QUrl &url) : QAbstractFileEngine(), quUrl(url) {
-	const QString &domain = url.host();
-	qslPath = url.path().split(QLatin1Char('/'), QString::SkipEmptyParts);
+#ifdef Q_OS_MAC
+		QMap<Qt::CursorShape, QPixmap> qmCursors;
+#endif
 
-	if (domain == QLatin1String("avatar") && (qslPath.size() == 2)) {
+		bool bWasVisible;
+		bool bDelete;
 
-		unsigned int session = qslPath.first().toUInt();
-		ClientUser *cu = ClientUser::get(session);
+		void setupRender();
+		void setupScene(bool show);
 
-		if (cu)
-			qbData.setData(cu->qbaTexture);
-	}
-}
+		bool eventFilter(QObject *, QEvent *);
 
-bool MumbleImageFileEngine::open(QIODevice::OpenMode om) {
-	return qbData.open(om);
-}
+		void readyReadMsgInit(unsigned int length);
 
-bool MumbleImageFileEngine::close() {
-	qbData.close();
-	return true;
-}
+		QList<QRectF> qlDirty;
+	protected slots:
+		void readyRead();
+		void changed(const QList<QRectF> &);
+		void render();
+	public:
+		QGraphicsView qgv;
+		unsigned int uiWidth, uiHeight;
+		int iMouseX, iMouseY;
 
-bool MumbleImageFileEngine::seek(qint64 offset) {
-	return qbData.seek(offset);
-}
+		OverlayClient(QLocalSocket *, QObject *);
+		~OverlayClient();
+		void reset();
+	public slots:
+		void showGui();
+		void hideGui();
+		void scheduleDelete();
+		void updateMouse();
+		void updateFPS();
+		void updateTime();
+		bool update();
+		void openEditor();
+};
 
-qint64 MumbleImageFileEngine::size() const {
-	return qbData.size();
-}
-
-qint64 MumbleImageFileEngine::pos() const {
-	return qbData.pos();
-}
-
-qint64 MumbleImageFileEngine::read(char *data, qint64 maxlen) {
-	return qbData.read(data, maxlen);
-}
-
-QString MumbleImageFileEngine::fileName(QAbstractFileEngine::FileName fn) const {
-	switch (fn) {
-		case QAbstractFileEngine::BaseName:
-			return qslPath.last();
-		default:
-			return quUrl.toString();
-	}
-}
+#endif

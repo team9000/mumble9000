@@ -28,14 +28,14 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef _MUMBLE_PLUGIN_H
-#define _MUMBLE_PLUGIN_H
+#ifndef MUMBLE_MUMBLE_PLUGIN_H_
+#define MUMBLE_MUMBLE_PLUGIN_H_
 
 #include <string>
 #include <map>
 
-#define MUMBLE_PLUGIN_MAGIC 0xd63ab7f0
-#define MUMBLE_PLUGIN_MAGIC_2 0xd63ab7ff
+#define MUMBLE_PLUGIN_MAGIC 0xd63ab7c0
+#define MUMBLE_PLUGIN_MAGIC_2 0xd63ab7cf
 #define MUMBLE_PLUGIN_VERSION 2
 
 typedef struct _MumblePlugin {

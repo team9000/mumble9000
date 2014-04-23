@@ -29,11 +29,20 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef MAINWINDOW_H_
-#define MAINWINDOW_H_
+#ifndef MUMBLE_MUMBLE_MAINWINDOW_H_
+#define MUMBLE_MUMBLE_MAINWINDOW_H_
 
-#include <QtGui/QMainWindow>
-#include <QtGui/QSystemTrayIcon>
+#include <QtCore/QtGlobal>
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+# include <QtCore/QPointer>
+# include <QtWidgets/QMainWindow>
+# include <QtWidgets/QSystemTrayIcon>
+#else
+# include <QtCore/QWeakPointer>
+# include <QtGui/QMainWindow>
+# include <QtGui/QSystemTrayIcon>
+#endif
+
 #include <QtNetwork/QAbstractSocket>
 
 #include "CustomElements.h"
@@ -88,8 +97,9 @@ class MainWindow : public QMainWindow, public MessageHandler, public Ui::MainWin
 		QIcon qiTalkingOn, qiTalkingWhisper, qiTalkingShout, qiTalkingOff;
 
 		GlobalShortcut *gsPushTalk, *gsResetAudio, *gsMuteSelf, *gsDeafSelf;
-		GlobalShortcut *gsUnlink, *gsPushMute, *gsMetaChannel, *gsToggleOverlay;
-		GlobalShortcut *gsMinimal, *gsVolumeUp, *gsVolumeDown, *gsWhisper, *gsMetaLink;
+		GlobalShortcut *gsUnlink, *gsPushMute, *gsJoinChannel, *gsToggleOverlay;
+		GlobalShortcut *gsMinimal, *gsVolumeUp, *gsVolumeDown, *gsWhisper, *gsLinkChannel;
+		GlobalShortcut *gsCycleTransmitMode;
 		DockTitleBar *dtbLogDockTitle, *dtbChatDockTitle;
 
 		ACLEditor *aclEdit;
@@ -100,13 +110,20 @@ class MainWindow : public QMainWindow, public MessageHandler, public Ui::MainWin
 		VoiceRecorderDialog *voiceRecorderDialog;
 
 		MumbleProto::Reject_RejectType rtLast;
+		bool bRetryServer;
 		QString qsDesiredChannel;
 
 		bool bSuppressAskOnQuit;
 		bool bAutoUnmute;
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+		QPointer<Channel> cContextChannel;
+		QPointer<ClientUser> cuContextUser;
+#else
 		QWeakPointer<Channel> cContextChannel;
 		QWeakPointer<ClientUser> cuContextUser;
+#endif
+
 		QPoint qpContextPosition;
 
 		void recheckTTS();
@@ -133,7 +150,7 @@ class MainWindow : public QMainWindow, public MessageHandler, public Ui::MainWin
 		QList<QAction *> qlChannelActions;
 		QList<QAction *> qlUserActions;
 
-		QSet<ShortcutTarget> qsCurrentTargets;
+		QHash<ShortcutTarget, int> qmCurrentTargets;
 		QHash<QList<ShortcutTarget>, int> qmTargets;
 		QMap<int, int> qmTargetUse;
 		Channel *mapChannel(int idx) const;
@@ -170,6 +187,7 @@ class MainWindow : public QMainWindow, public MessageHandler, public Ui::MainWin
 		void on_qaSelfRegister_triggered();
 		void qmUser_aboutToShow();
 		void on_qaUserCommentReset_triggered();
+		void on_qaUserTextureReset_triggered();
 		void on_qaUserCommentView_triggered();
 		void on_qaUserKick_triggered();
 		void on_qaUserBan_triggered();
@@ -194,6 +212,7 @@ class MainWindow : public QMainWindow, public MessageHandler, public Ui::MainWin
 		void on_qaChannelUnlink_triggered();
 		void on_qaChannelUnlinkAll_triggered();
 		void on_qaChannelSendMessage_triggered();
+		void on_qaChannelFilter_triggered();
 		void on_qaChannelCopyURL_triggered();
 		void on_qaAudioReset_triggered();
 		void on_qaAudioMute_triggered();
@@ -221,6 +240,8 @@ class MainWindow : public QMainWindow, public MessageHandler, public Ui::MainWin
 		void on_qteLog_highlighted(const QUrl & link);
 		void on_qdwChat_dockLocationChanged(Qt::DockWidgetArea);
 		void on_qdwLog_dockLocationChanged(Qt::DockWidgetArea);
+		void on_qdwChat_visibilityChanged(bool);
+		void on_qdwLog_visibilityChanged(bool);
 		void on_PushToTalk_triggered(bool, QVariant);
 		void on_PushToMute_triggered(bool, QVariant);
 		void on_VolumeUp_triggered(bool, QVariant);
@@ -228,6 +249,9 @@ class MainWindow : public QMainWindow, public MessageHandler, public Ui::MainWin
 		void on_gsMuteSelf_down(QVariant);
 		void on_gsDeafSelf_down(QVariant);
 		void on_gsWhisper_triggered(bool, QVariant);
+		void addTarget(ShortcutTarget *);
+		void removeTarget(ShortcutTarget *);
+		void on_gsCycleTransmitMode_triggered(bool, QVariant);
 		void on_Reconnect_timeout();
 		void on_Icon_messageClicked();
 		void on_Icon_activated(QSystemTrayIcon::ActivationReason);
@@ -240,13 +264,17 @@ class MainWindow : public QMainWindow, public MessageHandler, public Ui::MainWin
 		void context_triggered();
 		void updateTarget();
 		void updateMenuPermissions();
-		void talkingChanged();
+		/// Handles state changes like talking mode changes and mute/unmute
+		/// or priority speaker flag changes for the gui user
+		void userStateChanged();
 		void destroyUserInformation();
 		void trayAboutToShow();
 		void sendChatbarMessage(QString msg);
 		void pttReleased();
 		void whisperReleased(QVariant scdata);
 		void onResetAudio();
+		void on_qaFilterToggle_triggered();
+
 	public:
 		MainWindow(QWidget *parent);
 		~MainWindow();

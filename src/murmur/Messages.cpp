@@ -488,6 +488,11 @@ void Server::msgUserState(ServerUser *uSource, MumbleProto::UserState &msg) {
 	// team9000
 	QString comment = u8(msg.comment());
 
+	if (msg.has_name()) {
+		PERM_DENIED_TYPE(UserName);
+		return;
+	}
+
 	if(uSource->iId == -1337) {
 		// auth server can do whatever it wants.
 		msg.set_actor(pDstServerUser->uiSession);
@@ -564,6 +569,16 @@ void Server::msgUserState(ServerUser *uSource, MumbleProto::UserState &msg) {
 				return;
 			}
 		}
+		if (uSource != pDstServerUser) {
+			if (! hasPermission(uSource, root, ChanACL::Move)) {
+				PERM_DENIED(uSource, root, ChanACL::Move);
+				return;
+			}
+			if (msg.texture().length() > 0) {
+				PERM_DENIED_TYPE(TextTooLong);
+				return;
+			}
+		}
 	}
 
 	// team9000
@@ -587,13 +602,14 @@ void Server::msgUserState(ServerUser *uSource, MumbleProto::UserState &msg) {
 
 	if (msg.has_texture()) {
 		QByteArray qba = blob(msg.texture());
-		if (uSource->iId > 0) {
+		if (pDstServerUser->iId > 0) {
 			// For registered users store the texture we just received in the database
-			if (! setTexture(uSource->iId, qba))
+			if (! setTexture(pDstServerUser->iId, qba)) {
 				return;
+			}
 		} else {
 			// For unregistered users or SuperUser only get the hash
-			hashAssign(uSource->qbaTexture, uSource->qbaTextureHash, qba);
+			hashAssign(pDstServerUser->qbaTexture, pDstServerUser->qbaTextureHash, qba);
 		}
 
 		// The texture will be sent out later in this function

@@ -292,7 +292,11 @@ void ServerHandler::run() {
 	bUdp = false;
 
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+	qtsSock->setProtocol(QSsl::TlsV1_0);
+#else
 	qtsSock->setProtocol(QSsl::TlsV1);
+#endif
 	qtsSock->connectToHostEncrypted(qsHostName, usPort);
 
 	tTimestamp.restart();
@@ -547,7 +551,10 @@ void ServerHandler::serverConnectionConnected() {
 		qbaDigest = sha1(qsc.publicKey().toDer());
 		bUdp = Database::getUdp(qbaDigest);
 	} else {
-		bUdp = true;
+		// Shouldn't reach this
+		qCritical("Server must have a certificate. Dropping connection");
+		disconnect();
+		return;
 	}
 
 	MumbleProto::Version mpv;
@@ -559,7 +566,7 @@ void ServerHandler::serverConnectionConnected() {
 	}
 
 	mpv.set_os(u8(OSInfo::getOS()));
-	mpv.set_os_version(u8(OSInfo::getOSVersion()));
+	mpv.set_os_version(u8(OSInfo::getOSDisplayableVersion()));
 	sendMessage(mpv);
 
 	MumbleProto::Authenticate mpa;
@@ -673,49 +680,6 @@ void ServerHandler::createChannel(unsigned int parent_, const QString &name, con
 	sendMessage(mpcs);
 }
 
-void ServerHandler::setTexture(const QByteArray &qba) {
-	QByteArray texture;
-	if ((uiVersion >= 0x010202) || qba.isEmpty()) {
-		texture = qba;
-	} else {
-		QByteArray raw = qba;
-		QBuffer qb(& raw);
-		qb.open(QIODevice::ReadOnly);
-		QImageReader qir;
-		if (qba.startsWith("<?xml"))
-			qir.setFormat("svg");
-		qir.setDevice(&qb);
-
-		QSize sz = qir.size();
-		sz.scale(600, 60, Qt::KeepAspectRatio);
-		qir.setScaledSize(sz);
-
-		QImage tex = qir.read();
-
-		if (tex.isNull())
-			return;
-
-		qWarning() << tex.width() << tex.height();
-
-		raw = QByteArray(600*60*4, 0);
-		QImage img(reinterpret_cast<unsigned char *>(raw.data()), 600, 60, QImage::Format_ARGB32);
-
-		QPainter imgp(&img);
-		imgp.setRenderHint(QPainter::Antialiasing);
-		imgp.setRenderHint(QPainter::TextAntialiasing);
-		imgp.setCompositionMode(QPainter::CompositionMode_SourceOver);
-		imgp.drawImage(0, 0, tex);
-
-		texture = qCompress(QByteArray(reinterpret_cast<const char *>(img.bits()), 600*60*4));
-	}
-	MumbleProto::UserState mpus;
-	mpus.set_texture(blob(texture));
-	sendMessage(mpus);
-
-	if (! texture.isEmpty())
-		Database::setBlob(sha1(texture), texture);
-}
-
 void ServerHandler::requestBanList() {
 	MumbleProto::BanList mpbl;
 	mpbl.set_query(true);
@@ -763,7 +727,7 @@ void ServerHandler::sendChannelTextMessage(unsigned int channel, const QString &
 	} else {
 		mptm.add_channel_id(channel);
 
-		if (message_ == QString::fromAscii(g.ccHappyEaster + 10)) g.bHappyEaster = true;
+		if (message_ == QString::fromUtf8(g.ccHappyEaster + 10)) g.bHappyEaster = true;
 	}
 	mptm.set_message(u8(message_));
 	sendMessage(mptm);
@@ -774,6 +738,52 @@ void ServerHandler::setUserComment(unsigned int uiSession, const QString &commen
 	mpus.set_session(uiSession);
 	mpus.set_comment(u8(comment));
 	sendMessage(mpus);
+}
+
+void ServerHandler::setUserTexture(unsigned int uiSession, const QByteArray &qba) {
+	QByteArray texture;
+
+	if ((uiVersion >= 0x010202) || qba.isEmpty()) {
+		texture = qba;
+	} else {
+		QByteArray raw = qba;
+		QBuffer qb(& raw);
+		qb.open(QIODevice::ReadOnly);
+		QImageReader qir;
+		if (qba.startsWith("<?xml")) {
+			qir.setFormat("svg");
+		}
+		qir.setDevice(&qb);
+
+		QSize sz = qir.size();
+		sz.scale(600, 60, Qt::KeepAspectRatio);
+		qir.setScaledSize(sz);
+
+		QImage tex = qir.read();
+		if (tex.isNull()) {
+			return;
+		}
+
+		raw = QByteArray(600*60*4, 0);
+		QImage img(reinterpret_cast<unsigned char *>(raw.data()), 600, 60, QImage::Format_ARGB32);
+
+		QPainter imgp(&img);
+		imgp.setRenderHint(QPainter::Antialiasing);
+		imgp.setRenderHint(QPainter::TextAntialiasing);
+		imgp.setCompositionMode(QPainter::CompositionMode_SourceOver);
+		imgp.drawImage(0, 0, tex);
+
+		texture = qCompress(QByteArray(reinterpret_cast<const char *>(img.bits()), 600*60*4));
+	}
+
+	MumbleProto::UserState mpus;
+	mpus.set_session(uiSession);
+	mpus.set_texture(blob(texture));
+	sendMessage(mpus);
+
+	if (! texture.isEmpty()) {
+		Database::setBlob(sha1(texture), texture);
+	}
 }
 
 void ServerHandler::removeChannel(unsigned int channel) {

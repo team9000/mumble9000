@@ -49,25 +49,6 @@
 #define SQLEXECBATCH() ServerDB::execBatch(query)
 #define SOFTEXEC() ServerDB::exec(query, QString(), false)
 
-class TransactionHolder {
-	public:
-		QSqlQuery *qsqQuery;
-		TransactionHolder() {
-			ServerDB::db->transaction();
-			qsqQuery = new QSqlQuery();
-		}
-
-		~TransactionHolder() {
-			qsqQuery->clear();
-			delete qsqQuery;
-			ServerDB::db->commit();
-		}
-};
-
-QSqlDatabase *ServerDB::db;
-Timer ServerDB::tLogClean;
-QString ServerDB::qsUpgradeSuffix;
-
 ServerDB::ServerDB() {
 }
 
@@ -95,6 +76,11 @@ int Server::registerUser(const QMap<int, QString> &info) {
 
 bool Server::unregisterUserDB(int id) {
 	return false;
+}
+
+QList<UserInfo> Server::getRegisteredUsersEx() {
+	QList<UserInfo> users;
+	return users;
 }
 
 QMap<int, QString > Server::getRegisteredUsers(const QString &filter) {

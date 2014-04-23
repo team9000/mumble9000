@@ -51,12 +51,19 @@ static ConfigRegistrar registrar(4000, LogConfigDialogNew);
 LogConfig::LogConfig(Settings &st) : ConfigWidget(st) {
 	setupUi(this);
 
-
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+	qtwMessages->header()->setSectionResizeMode(ColMessage, QHeaderView::Stretch);
+	qtwMessages->header()->setSectionResizeMode(ColConsole, QHeaderView::ResizeToContents);
+	qtwMessages->header()->setSectionResizeMode(ColNotification, QHeaderView::ResizeToContents);
+	qtwMessages->header()->setSectionResizeMode(ColTTS, QHeaderView::ResizeToContents);
+	qtwMessages->header()->setSectionResizeMode(ColStaticSound, QHeaderView::ResizeToContents);
+#else
 	qtwMessages->header()->setResizeMode(ColMessage, QHeaderView::Stretch);
 	qtwMessages->header()->setResizeMode(ColConsole, QHeaderView::ResizeToContents);
 	qtwMessages->header()->setResizeMode(ColNotification, QHeaderView::ResizeToContents);
 	qtwMessages->header()->setResizeMode(ColTTS, QHeaderView::ResizeToContents);
 	qtwMessages->header()->setResizeMode(ColStaticSound, QHeaderView::ResizeToContents);
+#endif
 
 	QTreeWidgetItem *twi;
 	for (int i = Log::firstMsgType; i <= Log::lastMsgType; ++i) {
@@ -181,9 +188,10 @@ void LogConfig::on_qtwMessages_itemDoubleClicked(QTreeWidgetItem * item, int col
 }
 
 void LogConfig::browseForAudioFile() {
-	QString file = AudioOutputSample::browseForSndfile();
+	QTreeWidgetItem *i = qtwMessages->selectedItems()[0];
+	QString defaultpath(i->text(ColStaticSoundPath));
+	QString file = AudioOutputSample::browseForSndfile(defaultpath);
 	if (!file.isEmpty()) {
-		QTreeWidgetItem *i = qtwMessages->selectedItems()[0];
 		i->setText(ColStaticSoundPath, file);
 		i->setCheckState(ColStaticSound, Qt::Checked);
 	}
@@ -255,10 +263,10 @@ QString Log::msgColor(const QString &text, LogColorType t) {
 }
 
 QString Log::formatChannel(::Channel *c) {
-	return QString::fromLatin1("<a href='channelid://%1/%3' class='log-channel'>%2</a>").arg(c->iId).arg(c->qsName).arg(QString::fromLatin1(g.sh->qbaDigest.toBase64()));
+	return QString::fromLatin1("<a href='channelid://%1/%3' class='log-channel'>%2</a>").arg(c->iId).arg(Qt::escape(c->qsName)).arg(QString::fromLatin1(g.sh->qbaDigest.toBase64()));
 }
 
-QString Log::formatClientUser(ClientUser *cu, LogColorType t) {
+QString Log::formatClientUser(ClientUser *cu, LogColorType t, const QString &displayName) {
 	QString className;
 	if (t == Log::Target) {
 		className = QString::fromLatin1("target");
@@ -267,10 +275,11 @@ QString Log::formatClientUser(ClientUser *cu, LogColorType t) {
 	}
 
 	if (cu) {
+		QString name = Qt::escape(displayName.isNull() ? cu->qsName : displayName);
 		if (cu->qsHash.isEmpty()) {
-			return QString::fromLatin1("<a href='clientid://%2/%4' class='log-user log-%1'>%3</a>").arg(className).arg(cu->uiSession).arg(cu->qsName).arg(QString::fromLatin1(g.sh->qbaDigest.toBase64()));
+			return QString::fromLatin1("<a href='clientid://%2/%4' class='log-user log-%1'>%3</a>").arg(className).arg(cu->uiSession).arg(name).arg(QString::fromLatin1(g.sh->qbaDigest.toBase64()));
 		} else {
-			return QString::fromLatin1("<a href='clientid://%2' class='log-user log-%1'>%3</a>").arg(className).arg(cu->qsHash).arg(cu->qsName);
+			return QString::fromLatin1("<a href='clientid://%2' class='log-user log-%1'>%3</a>").arg(className).arg(cu->qsHash).arg(name);
 		}
 	} else {
 		return QString::fromLatin1("<span class='log-server log-%1'>%2</span>").arg(className).arg(tr("the server"));
@@ -666,7 +675,7 @@ void LogDocument::receivedHead() {
 	QNetworkReply *rep = qobject_cast<QNetworkReply *>(sender());
 	QVariant length = rep->header(QNetworkRequest::ContentLengthHeader);
 	if (length == QVariant::Invalid || length.toInt() > g.s.iMaxImageSize) {
-		qWarning() << "Image "<< rep->url().toString() <<" (" << length.toInt() << " byte) to big, request aborted. ";
+		qWarning() << "Image "<< rep->url().toString() <<" (" << length.toInt() << " byte) too big, request aborted. ";
 		rep->abort();
 	}
 }

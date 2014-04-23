@@ -30,11 +30,16 @@ CONFIG *= ordered debug_and_release
 
   SUBDIRS *= src/mumble
 
+  win32:CONFIG(static) {
+    SUBDIRS *= src/mumble_exe
+  }
+
   !CONFIG(no-plugins) {
     SUBDIRS *= plugins
   }
 
   win32 {
+    SUBDIRS *= 3rdparty/fx11-build
     SUBDIRS *= overlay
     !CONFIG(no-g15) {
       SUBDIRS *= g15helper
@@ -51,7 +56,7 @@ CONFIG *= ordered debug_and_release
       error("Missing $MUMBLE_PREFIX environment variable");
     }
     SUBDIRS *= macx
-    !exists($$(MUMBLE_PREFIX)/../lglcd) {
+    !exists($$(MUMBLE_PREFIX)/../LCDSDK) {
       CONFIG *= no-g15
     }
     !CONFIG(no-g15) {
