@@ -91,7 +91,7 @@ class SslServer : public QTcpServer {
 		Q_DISABLE_COPY(SslServer)
 	protected:
 		QList<QSslSocket *> qlSockets;
-		void incomingConnection(int);
+		void incomingConnection(qintptr);
 	public:
 		QSslSocket *nextPendingSSLConnection();
 		SslServer(QObject *parent = NULL);

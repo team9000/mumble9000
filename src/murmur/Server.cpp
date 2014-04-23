@@ -73,7 +73,7 @@ void ExecEvent::execute() {
 SslServer::SslServer(QObject *p) : QTcpServer(p) {
 }
 
-void SslServer::incomingConnection(int v) {
+void SslServer::incomingConnection(qintptr v) {
 	QSslSocket *s = new QSslSocket(this);
 	s->setSocketDescriptor(v);
 	qlSockets.append(s);
