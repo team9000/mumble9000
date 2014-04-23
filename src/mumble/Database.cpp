@@ -83,6 +83,7 @@ Database::Database() {
 	bool found = false;
 
 	for (i = 0; (i < datapaths.size()) && ! found; i++) {
+		QMessageBox::critical(NULL, QLatin1String("Mumble"), datapaths[i], QMessageBox::Ok | QMessageBox::Default, QMessageBox::NoButton);
 		if (!datapaths[i].isEmpty()) {
 			QFile f(datapaths[i] + QLatin1String("/mumble.sqlite"));
 			if (f.exists()) {

@@ -8,8 +8,8 @@ set MumbleZlibDir=%ZLIB_DIR%
 set MumbleNoSSE2=
 set MumbleNoG15=1
 set MumbleDebugToolsDir=%DEBUGTOOLS_DIR%
-set MumbleMergeModuleDir=%DIR%\mergemodules
-set WixToolPath=%DIR%\wix
+set MumbleMergeModuleDir=%TOOLCHAIN%\mergemodules
+set WixToolPath=%TOOLCHAIN%\wix
 set WixTargetsPath=%WixToolPath%\Wix.targets
 set WixTasksPath=%WixToolPath%\wixtasks.dll
 

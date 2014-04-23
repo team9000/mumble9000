@@ -42,6 +42,10 @@
 
 // Global helper class to spread variables around across threads.
 
+namespace Qt {
+	QString escape(QString input);
+}
+
 class MainWindow;
 class ServerHandler;
 class AudioInput;

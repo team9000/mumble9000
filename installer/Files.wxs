@@ -44,6 +44,7 @@
         </Component>
       <?endif ?>
 
+	  <!--
       <Component Id="murmur.exe">
         <File Id="murmur.exe" Source="$(var.SourceDir)\release\murmur.exe" KeyPath="yes">
           <Shortcut Id="MurmurShortcut" Directory="ApplicationProgramsFolder" Name="Murmur" WorkingDirectory="INSTALLDIR" Icon="murmur.ico" IconIndex="0" Advertise="yes" />
@@ -55,6 +56,7 @@
       <Component Id="Murmur.ice">
         <File Source="$(var.SourceDir)\src\murmur\Murmur.ice" KeyPath="yes" />
       </Component>
+	  -->
 
       <?ifndef StaticBuild ?>
         <Component Id="qt.conf">
@@ -223,66 +225,101 @@
   <?ifndef StaticBuild ?>
     <Fragment>
       <DirectoryRef Id="INSTALLDIR">
-        <Component Id="QtCore4.dll">
-          <File Source="$(var.QtDir)\bin\QtCore4.dll" KeyPath="yes" />
+        <Component Id="Qt5Core.dll">
+          <File Source="$(var.QtDir)\bin\Qt5Core.dll" KeyPath="yes" />
         </Component>
-        <Component Id="QtGui4.dll">
-          <File Source="$(var.QtDir)\bin\QtGui4.dll" KeyPath="yes" />
+        <Component Id="Qt5Gui.dll">
+          <File Source="$(var.QtDir)\bin\Qt5Gui.dll" KeyPath="yes" />
         </Component>
-        <Component Id="QtNetwork4.dll">
-          <File Source="$(var.QtDir)\bin\QtNetwork4.dll" KeyPath="yes" />
+        <Component Id="Qt5Network.dll">
+          <File Source="$(var.QtDir)\bin\Qt5Network.dll" KeyPath="yes" />
         </Component>
-        <Component Id="QtSql4.dll">
-          <File Source="$(var.QtDir)\bin\QtSql4.dll" KeyPath="yes" />
+        <Component Id="Qt5Sql.dll">
+          <File Source="$(var.QtDir)\bin\Qt5Sql.dll" KeyPath="yes" />
         </Component>
-        <Component Id="QtSvg4.dll">
-          <File Source="$(var.QtDir)\bin\QtSvg4.dll" KeyPath="yes" />
+        <Component Id="Qt5Svg.dll">
+          <File Source="$(var.QtDir)\bin\Qt5Svg.dll" KeyPath="yes" />
         </Component>
-        <Component Id="QtXml4.dll">
-          <File Source="$(var.QtDir)\bin\QtXml4.dll" KeyPath="yes" />
+        <Component Id="Qt5Widgets.dll">
+          <File Source="$(var.QtDir)\bin\Qt5Widgets.dll" KeyPath="yes" />
+        </Component>
+        <Component Id="Qt5Xml.dll">
+          <File Source="$(var.QtDir)\bin\Qt5Xml.dll" KeyPath="yes" />
+        </Component>
+
+        <Component Id="icudt51.dll">
+          <File Source="$(var.QtDir)\bin\icudt51.dll" KeyPath="yes" />
+        </Component>
+        <Component Id="icuin51.dll">
+          <File Source="$(var.QtDir)\bin\icuin51.dll" KeyPath="yes" />
+        </Component>
+        <Component Id="icuuc51.dll">
+          <File Source="$(var.QtDir)\bin\icuuc51.dll" KeyPath="yes" />
+        </Component>
+        <Component Id="libEGL.dll">
+          <File Source="$(var.QtDir)\bin\libEGL.dll" KeyPath="yes" />
+        </Component>
+        <Component Id="libGLESv2.dll">
+          <File Source="$(var.QtDir)\bin\libGLESv2.dll" KeyPath="yes" />
+        </Component>
+      </DirectoryRef>
+    </Fragment>
+
+    <Fragment>
+      <DirectoryRef Id="QtPluginPlatformsFolder">
+        <Component Id="qwindows.dll">
+          <File Source="$(var.QtDir)\plugins\platforms\qwindows.dll" KeyPath="yes" />
         </Component>
       </DirectoryRef>
     </Fragment>
 
     <Fragment>
       <DirectoryRef Id="QtPluginAccessibleFolder">
-        <Component Id="qtaccessiblewidgets4.dll">
-          <File Source="$(var.QtDir)\plugins\accessible\qtaccessiblewidgets4.dll" KeyPath="yes" />
+        <Component Id="qtaccessiblewidgets.dll">
+          <File Source="$(var.QtDir)\plugins\accessible\qtaccessiblewidgets.dll" KeyPath="yes" />
         </Component>
       </DirectoryRef>
     </Fragment>
 
     <Fragment>
       <DirectoryRef Id="QtPluginIconEnginesFolder">
-        <Component Id="qsvgicon4.dll">
-          <File Source="$(var.QtDir)\plugins\iconengines\qsvgicon4.dll" KeyPath="yes" />
+        <Component Id="qsvgicon.dll">
+          <File Source="$(var.QtDir)\plugins\iconengines\qsvgicon.dll" KeyPath="yes" />
+        </Component>
+      </DirectoryRef>
+    </Fragment>
+
+    <Fragment>
+      <DirectoryRef Id="QtPluginSqldriversFolder">
+        <Component Id="qsqlite.dll">
+          <File Source="$(var.QtDir)\plugins\sqldrivers\qsqlite.dll" KeyPath="yes" />
         </Component>
       </DirectoryRef>
     </Fragment>
 
     <Fragment>
       <DirectoryRef Id="QtPluginImageFormatsFolder">
-        <Component Id="qgif4.dll">
-          <File Source="$(var.QtDir)\plugins\imageformats\qgif4.dll" KeyPath="yes" />
+        <Component Id="qgif.dll">
+          <File Source="$(var.QtDir)\plugins\imageformats\qgif.dll" KeyPath="yes" />
         </Component>
-        <Component Id="qico4.dll">
-          <File Source="$(var.QtDir)\plugins\imageformats\qico4.dll" KeyPath="yes" />
+        <Component Id="qico.dll">
+          <File Source="$(var.QtDir)\plugins\imageformats\qico.dll" KeyPath="yes" />
         </Component>
-        <Component Id="qjpeg4.dll">
-          <File Source="$(var.QtDir)\plugins\imageformats\qjpeg4.dll" KeyPath="yes" />
+        <Component Id="qjpeg.dll">
+          <File Source="$(var.QtDir)\plugins\imageformats\qjpeg.dll" KeyPath="yes" />
         </Component>
-        <Component Id="qmng4.dll">
-          <File Source="$(var.QtDir)\plugins\imageformats\qmng4.dll" KeyPath="yes" />
+        <Component Id="qmng.dll">
+          <File Source="$(var.QtDir)\plugins\imageformats\qmng.dll" KeyPath="yes" />
         </Component>
-        <Component Id="qsvg4.dll">
-          <File Source="$(var.QtDir)\plugins\imageformats\qsvg4.dll" KeyPath="yes" />
+        <Component Id="qsvg.dll">
+          <File Source="$(var.QtDir)\plugins\imageformats\qsvg.dll" KeyPath="yes" />
         </Component>
-        <Component Id="qtiff4.dll">
-          <File Source="$(var.QtDir)\plugins\imageformats\qtiff4.dll" KeyPath="yes" />
+        <Component Id="qtiff.dll">
+          <File Source="$(var.QtDir)\plugins\imageformats\qtiff.dll" KeyPath="yes" />
         </Component>
       </DirectoryRef>
     </Fragment>
-
+<!--
     <Fragment>
       <DirectoryRef Id="QtPluginCodecsFolder">
         <Component Id="qcncodecs4.dll">
@@ -299,28 +336,40 @@
         </Component>
       </DirectoryRef>
     </Fragment>
-
+-->
     <Fragment>
       <ComponentGroup Id="Qt">
-        <ComponentRef Id="QtCore4.dll" />
-        <ComponentRef Id="QtGui4.dll" />
-        <ComponentRef Id="QtNetwork4.dll" />
-        <ComponentRef Id="QtSql4.dll" />
-        <ComponentRef Id="QtSvg4.dll" />
-        <ComponentRef Id="QtXml4.dll" />
+        <ComponentRef Id="Qt5Core.dll" />
+        <ComponentRef Id="Qt5Gui.dll" />
+        <ComponentRef Id="Qt5Network.dll" />
+        <ComponentRef Id="Qt5Sql.dll" />
+        <ComponentRef Id="Qt5Svg.dll" />
+		<ComponentRef Id="Qt5Widgets.dll" />
+        <ComponentRef Id="Qt5Xml.dll" />
+		
+		<ComponentRef Id="icudt51.dll" />
+		<ComponentRef Id="icuin51.dll" />
+		<ComponentRef Id="icuuc51.dll" />
+		<ComponentRef Id="libEGL.dll" />
+		<ComponentRef Id="libGLESv2.dll" />
+		<ComponentRef Id="qwindows.dll" />
 
-        <ComponentRef Id="qtaccessiblewidgets4.dll" />
-        <ComponentRef Id="qsvgicon4.dll" />
-        <ComponentRef Id="qgif4.dll" />
-        <ComponentRef Id="qico4.dll" />
-        <ComponentRef Id="qjpeg4.dll" />
-        <ComponentRef Id="qmng4.dll" />
-        <ComponentRef Id="qsvg4.dll" />
-        <ComponentRef Id="qtiff4.dll" />
+        <ComponentRef Id="qtaccessiblewidgets.dll" />
+        <ComponentRef Id="qsvgicon.dll" />
+		<ComponentRef Id="qsqlite.dll" />
+        <ComponentRef Id="qgif.dll" />
+        <ComponentRef Id="qico.dll" />
+        <ComponentRef Id="qjpeg.dll" />
+        <ComponentRef Id="qmng.dll" />
+        <ComponentRef Id="qsvg.dll" />
+        <ComponentRef Id="qtiff.dll" />
+
+<!--
         <ComponentRef Id="qcncodecs4.dll" />
         <ComponentRef Id="qjpcodecs4.dll" />
         <ComponentRef Id="qkrcodecs4.dll" />
         <ComponentRef Id="qtwcodecs4.dll" />
+-->
       </ComponentGroup>
     </Fragment>
   <?endif ?>
@@ -330,12 +379,12 @@
       <DirectoryRef Id="INSTALLDIR">
         <Directory Id="PluginFolder" Name="plugins" />
         <?ifndef StaticBuild ?>
-          <Directory Id="QtPluginFolder" Name="QtPlugins">
             <Directory Id="QtPluginIconEnginesFolder" Name="iconengines" />
             <Directory Id="QtPluginImageFormatsFolder" Name="imageformats" />
             <Directory Id="QtPluginAccessibleFolder" Name="accessible" />
+			<Directory Id="QtPluginSqldriversFolder" Name="sqldrivers" />
             <Directory Id="QtPluginCodecsFolder" Name="codecs" />
-          </Directory>
+			<Directory Id="QtPluginPlatformsFolder" Name="platforms" />
         <?endif ?>
       </DirectoryRef>
     </Fragment>

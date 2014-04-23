@@ -33,6 +33,12 @@
 #include "Global.h"
 #include "ServerHandler.h"
 
+namespace Qt {
+	QString escape(QString input) {
+		return input.toHtmlEscaped();
+	}
+}
+
 Global *Global::g_global_struct;
 
 static void migrateDataDir() {

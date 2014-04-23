@@ -1,6 +1,6 @@
 @echo off
 
-SET MumbleVersion=1.0.8
+SET MumbleVersion=1.0.9
 
 SET TOOLCHAIN=d:\toolchain
 
@@ -27,6 +27,6 @@ SET QMAKESPEC=%QT_DIR%\mkspecs\win32-msvc2010
 SET DXSDK_DIR=%TOOLCHAIN%\dxsdk\
 SET WindowsSDKDir=%TOOLCHAIN%\win8sdk
 CALL "%WindowsSDKDir%\bin\SetEnv.cmd"
-SET PATH=%TOOLCHAIN%\win8sdk\bin\x86;%GITBIN_DIR%;%PERLBIN_DIR%;%QT_DIR%\bin;%JOM_DIR%;%OPENSSL_DIR%\bin;%LIBSNDFILE_DIR%\bin;%MYSQL_DIR%\lib;%ICE_DIR%\bin\vc100;%PROTOBUF_DIR%\vsprojects\Release;%NASM_DIR%;%VLD_DIR%\bin;%PATH%
+SET PATH=%TOOLCHAIN%\win8sdk\bin\x86;C:\Windows\Microsoft.NET\Framework\v4.0.30319;%GITBIN_DIR%;%PERLBIN_DIR%;%QT_DIR%\bin;%JOM_DIR%;%OPENSSL_DIR%\bin;%LIBSNDFILE_DIR%\bin;%MYSQL_DIR%\lib;%ICE_DIR%\bin\vc100;%PROTOBUF_DIR%\vsprojects\Release;%NASM_DIR%;%VLD_DIR%\bin;%PATH%
 
 TITLE Mumble Development Environment

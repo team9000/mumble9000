@@ -3,7 +3,7 @@
   <?include "Settings.wxi" ?>
 
   <Product Id="*" Name="$(var.ProductName) $(var.ProductVersion)" Language="!(loc.LANG)" Version="$(var.ProductVersion)" Manufacturer="$(var.ProductManufacturer)" UpgradeCode="B0EEFCC7-8A9c-4471-AB10-CBD35BE3161D">
-    <Package Id="*" InstallerVersion="300" Compressed="yes" Languages="0,1028,1029,1030,1031,1033,1034,1036,1040,1041,1043,1044,1045,1046,1049,1053,1055,2052" />
+    <Package Id="*" InstallerVersion="405" Compressed="yes" Languages="0,1028,1029,1030,1031,1033,1034,1036,1040,1041,1043,1044,1045,1046,1049,1053,1055,2052" />
 
     <Property Id='NSISINSTALL'>
       <RegistrySearch Id='NSISSearch' Win64='no' Root='HKLM' Key='SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Mumble' Type='directory' Name='InstallLocation' />
@@ -162,6 +162,7 @@
       
     </Feature>
 
+	<!--
     <Feature Id="Murmur" Title="!(loc.MUMBLE_SEC_MURMUR)" Description="!(loc.DESC_SectionMurmur)" Level="1000" ConfigurableDirectory="INSTALLDIR">
       <?ifndef StaticBuild ?>
         <?ifdef IceDir ?>
@@ -178,6 +179,7 @@
       <ComponentRef Id="murmur.ini" />
       <ComponentRef Id="Murmur.ice" />
     </Feature>
+	-->
 
     <Feature Id="Libraries" Title="Required Libraries" Display="hidden" AllowAdvertise="no" Absent="disallow" Level="1">
       <ComponentGroupRef Id="LibrariesCommon" />
