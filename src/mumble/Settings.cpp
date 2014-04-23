@@ -580,7 +580,7 @@ void Settings::nkFixes() {
 		g.s.bAttenuateOthers = false;
 	}
 	if(g.s.nkAudioEnable) {
-		double maxAmp = 2.0;
+		double maxAmp = 5.0;
 		double noiseSuppress = -30;
 
 		if(g.s.nkAudioType == 1) {
