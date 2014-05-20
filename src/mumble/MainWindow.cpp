@@ -54,6 +54,7 @@
 #include "OverlayClient.h"
 #include "Plugins.h"
 #include "PTTButtonWidget.h"
+#include "RichTextEditor.h"
 #include "ServerHandler.h"
 #include "TextMessage.h"
 #include "Tokens.h"
@@ -720,7 +721,7 @@ void MainWindow::openUrl(const QUrl &url) {
 	rtLast = MumbleProto::Reject_RejectType_None;
 	bRetryServer = true;
 	qaServerDisconnect->setEnabled(true);
-	g.l->log(Log::Information, tr("Connecting to server %1.").arg(Log::msgColor(host, Log::Server)));
+	g.l->log(Log::Information, tr("Connecting to server %1.").arg(Log::msgColor(Qt::escape(host), Log::Server)));
 	g.sh->setConnectionInfo(host, port, user, pw);
 	g.sh->start(QThread::TimeCriticalPriority);
 }
@@ -918,7 +919,7 @@ void MainWindow::on_qaServerConnect_triggered(bool autoconnect) {
 		rtLast = MumbleProto::Reject_RejectType_None;
 		bRetryServer = true;
 		qaServerDisconnect->setEnabled(true);
-		g.l->log(Log::Information, tr("Connecting to server %1.").arg(Log::msgColor(cd->qsServer, Log::Server)));
+		g.l->log(Log::Information, tr("Connecting to server %1.").arg(Log::msgColor(Qt::escape(cd->qsServer), Log::Server)));
 		g.sh->setConnectionInfo(cd->qsServer, cd->usPort, cd->qsUsername, cd->qsPassword);
 		g.sh->start(QThread::TimeCriticalPriority);
 	}
@@ -1091,7 +1092,7 @@ void MainWindow::on_qaServerInformation_triggered() {
 	                  Qt::escape(qsc.name()),
 	                  QString::fromLatin1("%1").arg(boost::accumulators::mean(g.sh->accTCP), 0, 'f', 2),
 	                  QString::fromLatin1("%1").arg(sqrt(boost::accumulators::variance(g.sh->accTCP)),0,'f',2),
-	                  host,
+	                  Qt::escape(host),
 	                  QString::number(port));
 	QString qsVoice, qsCrypt, qsAudio;
 
@@ -2860,7 +2861,7 @@ QPair<QByteArray, QImage> MainWindow::openImageFile() {
 #endif
 	}
 
-	QString fname = QFileDialog::getOpenFileName(this, tr("Choose image file"), g.s.qsImagePath, tr("Images (*.png *.jpg *.jpeg *.svg)"));
+	QString fname = QFileDialog::getOpenFileName(this, tr("Choose image file"), g.s.qsImagePath, tr("Images (*.png *.jpg *.jpeg)"));
 
 	if (fname.isNull())
 		return retval;
@@ -2880,7 +2881,17 @@ QPair<QByteArray, QImage> MainWindow::openImageFile() {
 	QBuffer qb(&qba);
 	qb.open(QIODevice::ReadOnly);
 
-	QImageReader qir(&qb, fi.suffix().toUtf8());
+	QImageReader qir;
+	qir.setAutoDetectImageFormat(false);
+
+	QByteArray fmt;
+	if (!RichTextImage::isValidImage(qba, fmt)) {
+		QMessageBox::warning(this, tr("Failed to load image"), tr("Image format not recognized."));
+		return retval;
+	}
+
+	qir.setFormat(fmt);
+	qir.setDevice(&qb);
 
 	QImage img = qir.read();
 	if (img.isNull()) {
