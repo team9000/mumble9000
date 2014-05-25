@@ -1,6 +1,6 @@
 @echo off
 
-SET MumbleVersion=1.0.9
+SET MumbleVersion=1.0.10
 
 SET TOOLCHAIN=d:\toolchain
 
@@ -21,6 +21,7 @@ SET PERLBIN_DIR=%TOOLCHAIN%\perl\bin
 SET ZLIB_DIR=%TOOLCHAIN%\zlib
 SET DEBUGTOOLS_DIR=%TOOLCHAIN%\WDK\bin
 SET CODESIGN_CERT=d:\jenkins\secure\code.p12
+SET NSIS_DIR=%TOOLCHAIN%\nsis
 
 SET QMAKESPEC=%QT_DIR%\mkspecs\win32-msvc2010
 

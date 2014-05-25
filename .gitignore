@@ -31,3 +31,4 @@ mumble_ol_resource.rc
 celt0_resource.rc
 installer/obj
 Mumble*.msi
+Mumble*.exe
