@@ -25,7 +25,7 @@ DEBUGTOOLS_DIR=$TOOLCHAIN/WDK/bin
 CODESIGN_CERT=d:/jenkins/secure/code.p12
 NSIS_DIR=$TOOLCHAIN/nsis
 
-find c:/Qt/5.4 -maxdepth 2
+find.exe c:/Qt/5.4 -maxdepth 2
 
 # QMAKESPEC=%QT_DIR%/mkspecs/win32-msvc2010
 
