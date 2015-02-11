@@ -1,3 +1,5 @@
+#!/bin/bash
+set -e; set -u
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 MumbleVersion=1.1.$APPVEYOR_BUILD_NUMBER
