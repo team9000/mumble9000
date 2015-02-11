@@ -18,21 +18,20 @@ PROTOBUF_DIR=$TOOLCHAIN/protobuf
 LIBSNDFILE_DIR=$TOOLCHAIN/libsndfile
 OPENSSL_DIR=$TOOLCHAIN/openssl
 BOOST_DIR=$TOOLCHAIN/boost
-GITBIN_DIR=$TOOLCHAIN/bin
-PERLBIN_DIR=$TOOLCHAIN/perl/bin
 ZLIB_DIR=$TOOLCHAIN/zlib
 DEBUGTOOLS_DIR=$TOOLCHAIN/WDK/bin
 CODESIGN_CERT=d:/jenkins/secure/code.p12
 NSIS_DIR=$TOOLCHAIN/nsis
 
-find.exe c:/Qt/5.4 -maxdepth 2
+ls c:/Qt
+ls c:/Qt/5.4
 
 # QMAKESPEC=%QT_DIR%/mkspecs/win32-msvc2010
 
 # DXSDK_DIR=$TOOLCHAIN/dxsdk/
 # WindowsSDKDir=$TOOLCHAIN/win8sdk
 # CALL "%WindowsSDKDir%/bin/SetEnv.cmd"
-# PATH=$TOOLCHAIN/win8sdk/bin/x86;C:/Windows/Microsoft.NET/Framework/v4.0.30319;%GITBIN_DIR%;%PERLBIN_DIR%;%QT_DIR%/bin;%JOM_DIR%;%OPENSSL_DIR%/bin;%LIBSNDFILE_DIR%/bin;%MYSQL_DIR%/lib;%ICE_DIR%/bin/vc100;%PROTOBUF_DIR%/vsprojects/Release;%NASM_DIR%;%VLD_DIR%/bin;%PATH%
+# PATH=$TOOLCHAIN/win8sdk/bin/x86;C:/Windows/Microsoft.NET/Framework/v4.0.30319;%QT_DIR%/bin;%JOM_DIR%;%OPENSSL_DIR%/bin;%LIBSNDFILE_DIR%/bin;%MYSQL_DIR%/lib;%ICE_DIR%/bin/vc100;%PROTOBUF_DIR%/vsprojects/Release;%NASM_DIR%;%VLD_DIR%/bin;%PATH%
 
 PATH=$QT_DIR/bin
 
