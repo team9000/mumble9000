@@ -8,7 +8,7 @@ TOOLCHAIN=$DIR/toolchain
 
 VSVER=10.0
 LIB=
-QT_DIR=C:/Qt/5.4
+QT_DIR=c:/Qt/5.4/msvc2013_opengl
 JOM_DIR=$TOOLCHAIN/jom
 VLD_DIR=$TOOLCHAIN/vld
 MYSQL_DIR=$TOOLCHAIN/mysql
@@ -22,9 +22,6 @@ ZLIB_DIR=$TOOLCHAIN/zlib
 DEBUGTOOLS_DIR=$TOOLCHAIN/WDK/bin
 CODESIGN_CERT=d:/jenkins/secure/code.p12
 NSIS_DIR=$TOOLCHAIN/nsis
-
-ls c:/Qt
-ls c:/Qt/5.4
 
 # QMAKESPEC=%QT_DIR%/mkspecs/win32-msvc2010
 
