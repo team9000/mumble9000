@@ -30,9 +30,9 @@ NSIS_DIR="$TOOLCHAIN/nsis"
 # CALL "%WindowsSDKDir%/bin/SetEnv.cmd"
 # PATH=$TOOLCHAIN/win8sdk/bin/x86;C:/Windows/Microsoft.NET/Framework/v4.0.30319;%QT_DIR%/bin;%JOM_DIR%;%OPENSSL_DIR%/bin;%LIBSNDFILE_DIR%/bin;%MYSQL_DIR%/lib;%ICE_DIR%/bin/vc100;%PROTOBUF_DIR%/vsprojects/Release;%NASM_DIR%;%VLD_DIR%/bin;%PATH%
 
-PATH="$QT_DIR/bin:$PATH"
+PATH="$(cygpath -u "$QT_DIR")/bin:$PATH"
 echo $PATH
-ls c:/cygwin/bin
+ls "$QT_DIR/bin"
 
 rm -Rf release
 mkdir release
