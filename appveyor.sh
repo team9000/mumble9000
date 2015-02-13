@@ -11,19 +11,23 @@ mkdir -p "$TMP"
 
 # vs2013 and Win8 SDK (Pre-Configured)
 
-# Utils
+# Cygwin Utils
+# preinstalled: git,wget,curl
+echo "Downloading cygwin utils"
 "/cygdrive/c/cygwin/setup-x86.exe" \
 	-q -n -O -R C:/cygwin -s http://cygwin.mirror.constant.com \
 	-l C:/cygwin/var/cache/setup \
-	-P git,wget,curl,unzip
+	-P unzip \
+	>/dev/null
 
 # Qt (Pre-Installed)
 QT_DIR="$(cygpath -u "c:/Qt/5.4/msvc2013_opengl")"
 PATH="$QT_DIR/bin:$PATH"
 
 # Jom
+echo "Downloading JOM"
 JOM_DIR="$TOOLCHAIN/jom"
-wget "http://download.qt-project.org/official_releases/jom/jom.zip" -O "$TMP/jom.zip"
+wget -q "http://download.qt-project.org/official_releases/jom/jom.zip" -O "$TMP/jom.zip"
 unzip "$TMP/jom.zip" -d "$JOM_DIR"
 PATH="$JOM_DIR:$PATH"
 chmod +x "$JOM_DIR/jom.exe"
@@ -59,7 +63,7 @@ qmake \
 	CONFIG+=no-bonjour CONFIG+=no-server \
 	CONFIG+=packaged -recursive
 
-cygstart jom clean
+jom clean
 jom -j4 release
 
 signtool sign \
