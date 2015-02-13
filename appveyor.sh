@@ -12,10 +12,10 @@ mkdir -p "$TMP"
 # vs2013 and Win8 SDK (Pre-Configured)
 
 # Utils
-#"/cygdrive/c/cygwin/setup-x86.exe" \
-#	-qnO -R C:/cygwin -s http://cygwin.mirror.constant.com \
-#	-l C:/cygwin/var/cache/setup \
-#	-P git -P wget -P curl -P unzip
+"/cygdrive/c/cygwin/setup-x86.exe" \
+	-q -n -O -R C:/cygwin -s http://cygwin.mirror.constant.com \
+	-l C:/cygwin/var/cache/setup \
+	-P git,wget,curl,unzip
 
 # Qt (Pre-Installed)
 QT_DIR="$(cygpath -u "c:/Qt/5.4/msvc2013_opengl")"
