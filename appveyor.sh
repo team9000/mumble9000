@@ -12,10 +12,10 @@ mkdir -p "$TMP"
 # vs2013 and Win8 SDK (Pre-Configured)
 
 # Utils
-"/cygdrive/c/cygwin/setup-x86.exe" \
-	-qnO -R C:/cygwin -s http://cygwin.mirror.constant.com \
-	-l C:/cygwin/var/cache/setup \
-	-P git -P wget -P curl -P unzip
+#"/cygdrive/c/cygwin/setup-x86.exe" \
+#	-qnO -R C:/cygwin -s http://cygwin.mirror.constant.com \
+#	-l C:/cygwin/var/cache/setup \
+#	-P git -P wget -P curl -P unzip
 
 # Qt (Pre-Installed)
 QT_DIR="$(cygpath -u "c:/Qt/5.4/msvc2013_opengl")"
@@ -26,6 +26,7 @@ JOM_DIR="$TOOLCHAIN/jom"
 wget "http://download.qt-project.org/official_releases/jom/jom.zip" -O "$TMP/jom.zip"
 unzip "$TMP/jom.zip" -d "$JOM_DIR"
 PATH="$JOM_DIR:$PATH"
+chmod +x "$JOM_DIR/jom.exe"
 
 VLD_DIR="$TOOLCHAIN/vld"
 MYSQL_DIR="$TOOLCHAIN/mysql"
@@ -50,15 +51,15 @@ NSIS_DIR="$TOOLCHAIN/nsis"
 rm -Rf release
 mkdir release
 
-git submodule update --init --recursive
+#git submodule update --init --recursive
 
-qmake \
-	CONFIG-=sse2 \
-	CONFIG+=no-plugins CONFIG+=no-asio CONFIG+=no-g15 \
-	CONFIG+=no-bonjour CONFIG+=no-server \
-	CONFIG+=packaged -recursive
+#qmake \
+#	CONFIG-=sse2 \
+#	CONFIG+=no-plugins CONFIG+=no-asio CONFIG+=no-g15 \
+#	CONFIG+=no-bonjour CONFIG+=no-server \
+#	CONFIG+=packaged -recursive
 
-jom clean
+cygstart jom clean
 jom -j4 release
 
 signtool sign \
