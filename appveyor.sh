@@ -1,89 +1,209 @@
 #!/bin/bash
 set -e; set -u
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DL="1"
+if [ -n "${NODL-}" ]; then DL=""; fi
 
-MumbleVersion="1.1.$APPVEYOR_BUILD_NUMBER"
+VERSION="1.1.$APPVEYOR_BUILD_NUMBER"
 
-TOOLCHAIN="$DIR/toolchain"
-mkdir -p "$TOOLCHAIN"
-TMP="$DIR/tmp"
-mkdir -p "$TMP"
+TOOLCHAIN="$ROOT/toolchain"
+TMP="$ROOT/tmp"
+if [ "$DL" ]; then rm -Rf "$TOOLCHAIN"; fi
+rm -Rf "$TMP"
+mkdir -p "$TOOLCHAIN" "$TMP"
 
-# vs2013 and Win8 SDK (Pre-Installed)
-ls "/cygdrive/c/Program Files/Microsoft SDKs"
-ls "/cygdrive/c/Program Files/Microsoft SDKs/Windows"
-ls "/cygdrive/c/Program Files/Microsoft SDKs/Windows/v8.1"
-ls "/cygdrive/c/Program Files/Microsoft SDKs/Windows/v8.1/Bin"
-"/cygdrive/c/Program Files/Microsoft SDKs/Windows/v8.1\Bin\SetEnv.cmd" /x86
+function download {
+	local URL="$1"
+	echo "Downloading $URL" >&2
+	local MD5="$(echo -n "$URL" | md5sum | cut -f1 -d" ")"
+	local CACHEDIR
+	if [ -n "${APPVEYOR-}" ]; then
+		CACHEDIR="/c/cygdrive/cache"
+	else
+		CACHEDIR="$ROOT/cache"
+	fi
+	mkdir -p "$CACHEDIR"
+	local CACHEFILE="$CACHEDIR/$MD5"
+	if [ -f "$CACHEFILE" ]; then
+		echo "(From Cache)" >&2
+		echo "$CACHEFILE"
+		return
+	fi
+	local TMPFILE="$TMP/$$.$RANDOM"
+	wget "$URL" -q -O "$TMPFILE"
+	mv "$TMPFILE" "$CACHEFILE"
+	echo "$CACHEFILE"
+}
+
+# Prep
+INCLUDE=""
+LIB=""
+
+echo " --- SETTING UP ENVIRONMENT ---"
 
 # Cygwin Utils
-# preinstalled: git,wget,curl
-echo "Downloading cygwin utils"
-"/cygdrive/c/cygwin/setup-x86.exe" \
-	-q -n -O -R C:/cygwin -s http://cygwin.mirror.constant.com \
-	-l C:/cygwin/var/cache/setup \
-	-P unzip \
-	>/dev/null
+# preinstalled: git,wget,curl,perl
+if [ -n "${APPVEYOR-}" ]; then
+	echo "Downloading cygwin utils"
+	"/cygdrive/c/cygwin/setup-x86.exe" \
+		-q -n -O -R C:/cygwin -s http://cygwin.mirror.constant.com \
+		-l C:/cygwin/var/cache/setup \
+		-P unzip \
+		>/dev/null
+fi
+
+# Visual Studio (Pre-Installed)
+VS_DIR="/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 12.0"
+PATH="$VS_DIR/VC/bin:$PATH"
+PATH="$VS_DIR/VC/vcpackages:$PATH"
+PATH="/cygdrive/c/Program Files (x86)/MSBuild/12.0/Bin:$PATH"
+INCLUDE="$(cygpath -w "$VS_DIR/VC/include");$INCLUDE"
+LIB="$(cygpath -w "$VS_DIR/VC/lib");$LIB"
+
+# Windows SDK (Pre-Installed)
+WINSDK_DIR="/cygdrive/c/Program Files (x86)/Windows Kits/8.1"
+PATH="$WINSDK_DIR/bin/x86:$PATH"
+INCLUDE="$(cygpath -w "$WINSDK_DIR/Include/um");$INCLUDE"
+INCLUDE="$(cygpath -w "$WINSDK_DIR/Include/shared");$INCLUDE"
+LIB="$(cygpath -w "$WINSDK_DIR/Lib/winv6.3/um/x86");$LIB"
+
+# DirectX SDK (Pre-Installed)
+DXSDK_DIR="C:\\Program Files (x86)\\Microsoft DirectX SDK\\"
+INCLUDE="$(cygpath -w "$DXSDK_DIR/Include");$INCLUDE"
+LIB="$(cygpath -w "$DXSDK_DIR/Lib/x86");$LIB"
 
 # Qt (Pre-Installed)
-QT_DIR="$(cygpath -u "c:/Qt/5.4/msvc2013_opengl")"
+QT_DIR="/cygdrive/c/Qt/5.4/msvc2013_opengl"
 PATH="$QT_DIR/bin:$PATH"
 
 # Jom
-echo "Downloading JOM"
 JOM_DIR="$TOOLCHAIN/jom"
-wget -q "http://download.qt-project.org/official_releases/jom/jom.zip" -O "$TMP/jom.zip"
-unzip -q "$TMP/jom.zip" -d "$JOM_DIR"
+if [ "$DL" ]; then
+	JOM_ZIP="$(download "http://download.qt-project.org/official_releases/jom/jom.zip")"
+	unzip -qo "$JOM_ZIP" -d "$JOM_DIR"
+fi
 PATH="$JOM_DIR:$PATH"
 chmod +x "$JOM_DIR/jom.exe"
 
-VLD_DIR="$TOOLCHAIN/vld"
-MYSQL_DIR="$TOOLCHAIN/mysql"
-NASM_DIR="$TOOLCHAIN/nasm"
-ICE_DIR="$TOOLCHAIN/ice"
-PROTOBUF_DIR="$TOOLCHAIN/protobuf"
-LIBSNDFILE_DIR="$TOOLCHAIN/libsndfile"
-OPENSSL_DIR="$TOOLCHAIN/openssl"
-BOOST_DIR="$TOOLCHAIN/boost"
-ZLIB_DIR="$TOOLCHAIN/zlib"
-DEBUGTOOLS_DIR="$TOOLCHAIN/WDK/bin"
-CODESIGN_CERT="d:/jenkins/secure/code.p12"
+# Protobuf Binary
+PROTOBUF_BIN_DIR="$TOOLCHAIN/protobuf-bin"
+if [ "$DL" ]; then
+	PROTOBUF_BIN_ZIP="$(download "https://ci.sites.team9000.net/protobuf-bin.zip")"
+	unzip -qo "$PROTOBUF_BIN_ZIP" -d "$PROTOBUF_BIN_DIR"
+fi
+chmod +x "$PROTOBUF_BIN_DIR/protoc.exe"
+PATH="$PROTOBUF_BIN_DIR:$PATH"
+LIB="$(cygpath -w "$PROTOBUF_BIN_DIR");$LIB"
+
+# Protobuf Lib
+PROTOBUF_LIB_DIR="$TOOLCHAIN/protobuf"
+if [ "$DL" ]; then
+	PROTOBUF_LIB_TAR="$(download "https://protobuf.googlecode.com/files/protobuf-2.5.0.tar.gz")"
+	mkdir "$PROTOBUF_LIB_DIR"
+	tar -xz --strip-components=1 -C "$PROTOBUF_LIB_DIR" -f "$PROTOBUF_LIB_TAR"
+fi
+INCLUDE="$(cygpath -w "$PROTOBUF_LIB_DIR/src");$INCLUDE"
+
+# Openssl Source
+OPENSSL_SRC_DIR="$TOOLCHAIN/openssl-src"
+if [ "$DL" ]; then
+	OPENSSL_SRC_TAR="$(download "https://www.openssl.org/source/openssl-1.0.2.tar.gz")"
+	mkdir "$OPENSSL_SRC_DIR"
+	tar -xz --strip-components=1 -C "$OPENSSL_SRC_DIR" -f "$OPENSSL_SRC_TAR"
+	# retar it and dereference the symlinks :(
+	tar -ch -C "$OPENSSL_SRC_DIR" -f "$TMP/openssl.tar" .
+	rm -Rf "$OPENSSL_SRC_DIR"
+	mkdir "$OPENSSL_SRC_DIR"
+	tar -x -C "$OPENSSL_SRC_DIR" -f "$TMP/openssl.tar"
+fi
+INCLUDE="$(cygpath -w "$OPENSSL_SRC_DIR/include");$INCLUDE"
+
+# Openssl Lib
+OPENSSL_LIB_DIR="$TOOLCHAIN/openssl-lib"
+if [ "$DL" ]; then
+	OPENSSL_LIB_ZIP="$(download "https://ci.sites.team9000.net/openssl-lib-b.zip")"
+	unzip -qo "$OPENSSL_LIB_ZIP" -d "$OPENSSL_LIB_DIR"
+fi
+LIB="$(cygpath -w "$OPENSSL_LIB_DIR");$LIB"
+
+# Sndfile
+SNDFILE_DIR="$TOOLCHAIN/sndfile"
+if [ "$DL" ]; then
+	SNDFILE_ZIP="$(download "https://ci.sites.team9000.net/libsndfile.zip")"
+	unzip -qo "$SNDFILE_ZIP" -d "$SNDFILE_DIR"
+fi
+INCLUDE="$(cygpath -w "$SNDFILE_DIR/include");$INCLUDE"
+LIB="$(cygpath -w "$SNDFILE_DIR/lib");$LIB"
+
+# Boost (Pre-Installed boost_1_56_0-msvc-12.0-32.exe)
+BOOST_DIR="/cygdrive/c/Libraries/boost"
+INCLUDE="$INCLUDE;$(cygpath -w "$BOOST_DIR")"
+LIB="$LIB;$(cygpath -w "$BOOST_DIR/lib32-msvc-12.0")"
+
+# NSIS
 NSIS_DIR="$TOOLCHAIN/nsis"
-
-# QMAKESPEC=%QT_DIR%/mkspecs/win32-msvc2010
-
-# DXSDK_DIR=$TOOLCHAIN/dxsdk/
-# WindowsSDKDir=$TOOLCHAIN/win8sdk
-# CALL "%WindowsSDKDir%/bin/SetEnv.cmd"
-# PATH=$TOOLCHAIN/win8sdk/bin/x86;C:/Windows/Microsoft.NET/Framework/v4.0.30319;%QT_DIR%/bin;%JOM_DIR%;%OPENSSL_DIR%/bin;%LIBSNDFILE_DIR%/bin;%MYSQL_DIR%/lib;%ICE_DIR%/bin/vc100;%PROTOBUF_DIR%/vsprojects/Release;%NASM_DIR%;%VLD_DIR%/bin;%PATH%
+if [ "$DL" ]; then
+	NSIS_ZIP="$(download "https://ci.sites.team9000.net/NSIS.zip")"
+	unzip -qo "$NSIS_ZIP" -d "$NSIS_DIR"
+fi
+NSIS_DIR=("$NSIS_DIR"/*)
+chmod +x "$NSIS_DIR/makensis.exe"
+chmod +x "$NSIS_DIR/Bin/makensis.exe"
+chmod +x "$NSIS_DIR/Bin/zlib1.dll"
+PATH="$NSIS_DIR/Bin:$PATH"
 
 rm -Rf release
 mkdir release
 
-git submodule update --init --recursive
+if [ -n "${APPVEYOR-}" ]; then
+	echo "Initing git submodules"
+	git submodule update --init --recursive
+fi
 
+export INCLUDE
+export LIB
+export DXSDK_DIR
+
+echo " --- QMAKE ---"
+
+MumbleVersion="$VERSION" \
 qmake \
 	CONFIG-=sse2 \
 	CONFIG+=no-plugins CONFIG+=no-asio CONFIG+=no-g15 \
 	CONFIG+=no-bonjour CONFIG+=no-server \
+	CONFIG+=no-elevation \
 	CONFIG+=packaged -recursive
 
-jom clean
-jom -j4 release
+echo " --- COMPILE ---"
 
-signtool sign \
-	/f %CODESIGN_CERT% \
-	/t "http://timestamp.verisign.com/scripts/timstamp.dll" \
-	release/*.exe release/*.dll release/plugins/*.dll
+jom clean
+jom -j8 release
+
+echo " --- SIGNING ---"
+
+#signtool sign \
+#/f %CODESIGN_CERT% \
+#/t "http://timestamp.verisign.com/scripts/timstamp.dll" \
+#release/*.exe release/*.dll release/plugins/*.dll
 
 rm -f mumble9000_installer/Mumble9000_install.exe
 rm -f Mumble9000_install.exe
 
-%NSIS_DIR%/Bin/makensis mumble9000_installer/mumble9000.nsi
+echo " --- BUILDING INSTALLER ---"
 
-signtool sign \
-/f %CODESIGN_CERT% \
-/t "http://timestamp.verisign.com/scripts/timstamp.dll" \
-mumble9000_installer/Mumble9000_install.exe
 
-mv mumble9000_installer/Mumble9000_install.exe "Mumble9000.$MumbleVersion.exe"
+
+LIBSNDFILE_DIR="$(cygpath -w "$SNDFILE_DIR")" \
+QT_DIR="$(cygpath -w "$QT_DIR")" \
+OPENSSL_DIR="$(cygpath -w "$OPENSSL_LIB_DIR")" \
+VS_DIR="$(cygpath -w "$VS_DIR")" \
+makensis mumble9000_installer/mumble9000.nsi
+
+echo " --- SIGNING INSTALLER ---"
+
+#signtool sign \
+#/f %CODESIGN_CERT% \
+#/t "http://timestamp.verisign.com/scripts/timstamp.dll" \
+#mumble9000_installer/Mumble9000_install.exe
+
+mv mumble9000_installer/Mumble9000_install.exe "Mumble9000.$VERSION.exe"

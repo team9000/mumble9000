@@ -22,7 +22,6 @@ QMAKE_CXXFLAGS_DEBUG	-= -MDd
 QMAKE_CXXFLAGS_RELEASE	*= -MT
 QMAKE_CXXFLAGS_DEBUG	*= -MTd
 
-INCLUDEPATH *= "$(DXSDK_DIR)Include"
 INCLUDEPATH *= "$$FX11DIR/inc"
 
 LIBS *= -l"$$(DXSDK_DIR)Lib/x86/dxguid" -luuid -lole32 -luser32 -ladvapi32

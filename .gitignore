@@ -26,6 +26,9 @@ src/murmur/Murmur.h
 src/murmur/Murmur.cpp
 winpaths_custom.pri
 src/mumble/mumble_plugin_import.cpp
+/toolchain/
+/cache/
+/tmp/
 
 mumble_ol_resource.rc
 celt0_resource.rc

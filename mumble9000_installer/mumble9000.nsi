@@ -53,12 +53,9 @@ Section
 	File "/oname=${EXENAME}.exe" "..\release\mumble.exe"
 	File "..\release\*.dll"
 	File "$%LIBSNDFILE_DIR%\bin\libsndfile-1.dll"
-	File "$%DEBUGTOOLS_DIR%\dbghelp.dll"
-	File "$%QT_DIR%\bin\icudt51.dll"
-	File "$%QT_DIR%\bin\icuin51.dll"
-	File "$%QT_DIR%\bin\icuuc51.dll"
-	File "$%QT_DIR%\bin\libEGL.dll"
-	File "$%QT_DIR%\bin\libGLESv2.dll"
+	File "$%QT_DIR%\bin\icudt53.dll"
+	File "$%QT_DIR%\bin\icuin53.dll"
+	File "$%QT_DIR%\bin\icuuc53.dll"
 	File "$%QT_DIR%\bin\Qt5Core.dll"
 	File "$%QT_DIR%\bin\Qt5Gui.dll"
 	File "$%QT_DIR%\bin\Qt5Network.dll"
@@ -66,11 +63,10 @@ Section
 	File "$%QT_DIR%\bin\Qt5Svg.dll"
 	File "$%QT_DIR%\bin\Qt5Widgets.dll"
 	File "$%QT_DIR%\bin\Qt5Xml.dll"
-	File "$%OPENSSL_DIR%\bin\libeay32.dll"
-	File "$%OPENSSL_DIR%\bin\ssleay32.dll"
-	File "$%ZLIB_DIR%\zlib1.dll"
-	SetOutPath "$INSTDIR\accessible"
-	File "$%QT_DIR%\plugins\accessible\qtaccessiblewidgets.dll"
+	File "$%OPENSSL_DIR%\libeay32.dll"
+	File "$%OPENSSL_DIR%\ssleay32.dll"
+    File "$%VS_DIR%\VC\redist\x86\Microsoft.VC120.CRT\msvcp120.dll"
+    File "$%VS_DIR%\VC\redist\x86\Microsoft.VC120.CRT\msvcr120.dll"
 	SetOutPath "$INSTDIR\iconengines"
 	File "$%QT_DIR%\plugins\iconengines\qsvgicon.dll"
 	SetOutPath "$INSTDIR\imageformats"
@@ -97,7 +93,7 @@ SectionEnd
 Function .onInstSuccess
 	;Call RefreshShellIcons
 	Exec '"$WINDIR\explorer.exe" "$INSTDIR\${EXENAME}.exe"'
-	
+
 	; If we quit before the main window opens, it doesn't
 	; get brought to the front on windows 8 :(
 	;Sleep 1000

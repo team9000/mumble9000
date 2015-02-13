@@ -147,6 +147,9 @@ CONFIG(sbcelt) {
 
 !win32 {
   QMAKE_CXXFLAGS	*= -Wall -Wextra
+} else {
+QMAKE_CFLAGS_RELEASE -= -Zc:strictStrings
+QMAKE_CXXFLAGS_RELEASE -= -Zc:strictStrings
 }
 
 !win32:!macx:!CONFIG(no-dbus) {
@@ -263,7 +266,7 @@ unix {
         LIBS += -lxar
       }
 
-      LIBS += -framework ScriptingBridge 
+      LIBS += -framework ScriptingBridge
       OBJECTIVE_SOURCES += Overlay_macx.mm
     } else {
       SOURCES += Overlay_unix.cpp
