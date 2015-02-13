@@ -51,13 +51,13 @@ NSIS_DIR="$TOOLCHAIN/nsis"
 rm -Rf release
 mkdir release
 
-#git submodule update --init --recursive
+git submodule update --init --recursive
 
-#qmake \
-#	CONFIG-=sse2 \
-#	CONFIG+=no-plugins CONFIG+=no-asio CONFIG+=no-g15 \
-#	CONFIG+=no-bonjour CONFIG+=no-server \
-#	CONFIG+=packaged -recursive
+qmake \
+	CONFIG-=sse2 \
+	CONFIG+=no-plugins CONFIG+=no-asio CONFIG+=no-g15 \
+	CONFIG+=no-bonjour CONFIG+=no-server \
+	CONFIG+=packaged -recursive
 
 cygstart jom clean
 jom -j4 release
