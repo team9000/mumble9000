@@ -5,11 +5,20 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 MumbleVersion="1.1.$APPVEYOR_BUILD_NUMBER"
 
 TOOLCHAIN="$DIR/toolchain"
+mkdir -p "$TOOLCHAIN"
+TMP="$DIR/tmp"
+mkdir -p "$TMP"
 
-VSVER="10.0"
-LIB=""
-QT_DIR="c:/Qt/5.4/msvc2013_opengl"
+# Qt (Preinstalled)
+QT_DIR="$(cygpath -u "c:/Qt/5.4/msvc2013_opengl")"
+PATH="$QT_DIR/bin:$PATH"
+
+# Jom
 JOM_DIR="$TOOLCHAIN/jom"
+wget "http://download.qt-project.org/official_releases/jom/jom.zip" -O "$TMP/jom.zip"
+unzip "$TMP/jom.zip" "$JOM_DIR"
+PATH="$JOM_DIR:$PATH"
+
 VLD_DIR="$TOOLCHAIN/vld"
 MYSQL_DIR="$TOOLCHAIN/mysql"
 NASM_DIR="$TOOLCHAIN/nasm"
@@ -29,8 +38,6 @@ NSIS_DIR="$TOOLCHAIN/nsis"
 # WindowsSDKDir=$TOOLCHAIN/win8sdk
 # CALL "%WindowsSDKDir%/bin/SetEnv.cmd"
 # PATH=$TOOLCHAIN/win8sdk/bin/x86;C:/Windows/Microsoft.NET/Framework/v4.0.30319;%QT_DIR%/bin;%JOM_DIR%;%OPENSSL_DIR%/bin;%LIBSNDFILE_DIR%/bin;%MYSQL_DIR%/lib;%ICE_DIR%/bin/vc100;%PROTOBUF_DIR%/vsprojects/Release;%NASM_DIR%;%VLD_DIR%/bin;%PATH%
-
-PATH="$(cygpath -u "$QT_DIR")/bin:$PATH"
 
 rm -Rf release
 mkdir release
