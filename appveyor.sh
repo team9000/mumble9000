@@ -16,7 +16,7 @@ PATH="$QT_DIR/bin:$PATH"
 # Jom
 JOM_DIR="$TOOLCHAIN/jom"
 wget "http://download.qt-project.org/official_releases/jom/jom.zip" -O "$TMP/jom.zip"
-unzip "$TMP/jom.zip" "$JOM_DIR"
+unzip "$TMP/jom.zip" -d "$JOM_DIR"
 PATH="$JOM_DIR:$PATH"
 
 VLD_DIR="$TOOLCHAIN/vld"
