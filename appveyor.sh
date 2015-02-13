@@ -9,7 +9,12 @@ mkdir -p "$TOOLCHAIN"
 TMP="$DIR/tmp"
 mkdir -p "$TMP"
 
-# vs2013 and Win8 SDK (Pre-Configured)
+# vs2013 and Win8 SDK (Pre-Installed)
+ls "/cygdrive/c/Program Files/Microsoft SDKs"
+ls "/cygdrive/c/Program Files/Microsoft SDKs/Windows"
+ls "/cygdrive/c/Program Files/Microsoft SDKs/Windows/v8.1"
+ls "/cygdrive/c/Program Files/Microsoft SDKs/Windows/v8.1/Bin"
+"/cygdrive/c/Program Files/Microsoft SDKs/Windows/v8.1\Bin\SetEnv.cmd" /x86
 
 # Cygwin Utils
 # preinstalled: git,wget,curl
@@ -28,7 +33,7 @@ PATH="$QT_DIR/bin:$PATH"
 echo "Downloading JOM"
 JOM_DIR="$TOOLCHAIN/jom"
 wget -q "http://download.qt-project.org/official_releases/jom/jom.zip" -O "$TMP/jom.zip"
-unzip "$TMP/jom.zip" -d "$JOM_DIR"
+unzip -q "$TMP/jom.zip" -d "$JOM_DIR"
 PATH="$JOM_DIR:$PATH"
 chmod +x "$JOM_DIR/jom.exe"
 
