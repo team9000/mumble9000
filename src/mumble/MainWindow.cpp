@@ -2778,7 +2778,7 @@ void MainWindow::updateChatBar() {
 
 	if (g.uiSession == 0) {
 		qteChat->setDefaultText(tr("<center>Not connected</center>"), true);
-	} else if (g.isTeam9000()) {
+	} else if (g.sh && g.sh->isTeam9000()) {
 		qteChat->setDefaultText(tr("<center>Type message here</center>"));
 	} else if (!g.s.bChatBarUseSelection || p == NULL || p->uiSession == g.uiSession) {
 		// Channel tree target

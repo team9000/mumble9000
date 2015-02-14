@@ -462,7 +462,7 @@ void Log::log(MsgType mt, const QString &console, const QString &terse, bool own
 	QString plain = QTextDocumentFragment::fromHtml(console).toPlainText();
 	QString out = console;
 	bool noTimestamp = false;
-	if(g.isTeam9000()) {
+	if(g.sh && g.sh->isTeam9000()) {
 		plain = QLatin1String("");
 		if(mt == Log::TextMessage && out.startsWith(tr("To ")))
 			return;
@@ -529,7 +529,7 @@ void Log::log(MsgType mt, const QString &console, const QString &terse, bool own
 
 		if(
 			plain.contains(QRegExp(QLatin1String("[\\r\\n]")))
-			&& !g.isTeam9000()
+			&& !(g.sh && g.sh->isTeam9000())
 		) {
 			QTextFrameFormat qttf;
 			qttf.setBorder(1);

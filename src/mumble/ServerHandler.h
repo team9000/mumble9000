@@ -147,6 +147,8 @@ class ServerHandler : public QThread {
 		void setSelfMuteDeafState(bool mute, bool deaf);
 		void announceRecordingState(bool recording);
 
+		bool isTeam9000();
+
 		void disconnect();
 		void run() Q_DECL_OVERRIDE;
 	signals:

@@ -674,7 +674,7 @@ void MainWindow::msgTextMessage(const MumbleProto::TextMessage &msg) {
 	ACTOR_INIT;
 	QString target;
 
-	if(g.isTeam9000()) {
+	if(g.sh && g.sh->isTeam9000()) {
 		const QString &prefix = pSrc ? tr("%1: ").arg(Log::formatClientUser(pSrc, Log::Source)) : tr("");
 		g.l->log(Log::TextMessage, tr("%1%2").arg(prefix).arg(u8(msg.message())));
 		return;

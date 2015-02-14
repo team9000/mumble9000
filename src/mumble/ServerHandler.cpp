@@ -835,3 +835,6 @@ void ServerHandler::announceRecordingState(bool recording) {
 	sendMessage(mpus);
 }
 
+bool ServerHandler::isTeam9000() {
+	return qsRelease == QObject::tr("team9000");
+}

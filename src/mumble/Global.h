@@ -109,8 +109,6 @@ public:
 	bool bHappyEaster;
 	static const char ccHappyEaster[];
 
-	bool isTeam9000();
-
 	Global();
 	~Global();
 };
