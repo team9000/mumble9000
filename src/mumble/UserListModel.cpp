@@ -33,7 +33,6 @@
 #include "UserListModel.h"
 #include "Channel.h"
 #include "Message.h"
-#include "Global.h"
 
 #include <vector>
 #include <algorithm>
