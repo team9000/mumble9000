@@ -42,6 +42,15 @@ unsigned int MumbleVersion::getRaw(const QString &version) {
 	return 0;
 }
 
+int MumbleVersion::getBuild(const QString &version) {
+	int major, minor, patch;
+
+	if (get(&major, &minor, &patch, version))
+		return patch;
+
+	return 0;
+}
+
 QString MumbleVersion::toString(unsigned int v) {
 	int major, minor, patch;
 	fromRaw(v, &major, &minor, &patch);

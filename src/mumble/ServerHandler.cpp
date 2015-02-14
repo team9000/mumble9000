@@ -560,11 +560,7 @@ void ServerHandler::serverConnectionConnected() {
 
 	MumbleProto::Version mpv;
 	mpv.set_release(u8(tr("team9000")));
-
-	unsigned int version = MumbleVersion::getRaw();
-	if (version) {
-		mpv.set_version(version);
-	}
+	mpv.set_version(MumbleVersion::getBuild());
 
 	mpv.set_os(u8(OSInfo::getOS()));
 	mpv.set_os_version(u8(OSInfo::getOSDisplayableVersion()));
