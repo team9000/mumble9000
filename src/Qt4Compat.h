@@ -33,6 +33,10 @@
 
 namespace Qt {
 
+inline QString escape(const QString &plain) {
+	return plain.toHtmlEscaped();
+}
+
 }
 
 #endif
