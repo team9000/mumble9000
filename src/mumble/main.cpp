@@ -459,6 +459,8 @@ int main(int argc, char **argv) {
 			if (CertWizard::validateCert(kp))
 				g.s.kpCertificate = kp;
 		}
+
+/*
 		if (! CertWizard::validateCert(g.s.kpCertificate)) {
 			CertWizard *cw = new CertWizard(g.mw);
 			cw->exec();
@@ -472,6 +474,7 @@ int main(int argc, char **argv) {
 				}
 			}
 		}
+*/
 	}
 
 	if (QDateTime::currentDateTime().daysTo(g.s.kpCertificate.first.first().expiryDate()) < 14)
