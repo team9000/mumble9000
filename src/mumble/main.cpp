@@ -460,21 +460,9 @@ int main(int argc, char **argv) {
 				g.s.kpCertificate = kp;
 		}
 
-/*
 		if (! CertWizard::validateCert(g.s.kpCertificate)) {
-			CertWizard *cw = new CertWizard(g.mw);
-			cw->exec();
-			delete cw;
-
-			if (! CertWizard::validateCert(g.s.kpCertificate)) {
-				g.s.kpCertificate = CertWizard::generateNewCert();
-				if (qf.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Unbuffered)) {
-					qf.write(CertWizard::exportCert(g.s.kpCertificate));
-					qf.close();
-				}
-			}
+			g.s.kpCertificate = CertWizard::generateNewCert();
 		}
-*/
 	}
 
 	if (QDateTime::currentDateTime().daysTo(g.s.kpCertificate.first.first().expiryDate()) < 14)
