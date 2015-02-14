@@ -6,11 +6,21 @@ if [ -n "${NODL-}" ]; then DL=""; fi
 
 VERSION="1.1.$APPVEYOR_BUILD_NUMBER"
 
+echo " --- RESETTING ---"
+
+
 TOOLCHAIN="$ROOT/toolchain"
 TMP="$ROOT/tmp"
+DIST="$ROOT/dist"
 if [ "$DL" ]; then rm -Rf "$TOOLCHAIN"; fi
-rm -Rf "$TMP"
-mkdir -p "$TOOLCHAIN" "$TMP"
+rm -Rf "$TMP" "$DIST"
+mkdir -p "$TOOLCHAIN" "$TMP" "$DIST"
+rm -f mumble9000_installer/Mumble9000_install.exe
+
+
+
+
+echo " --- SETTING UP ENVIRONMENT ---"
 
 function download {
 	local URL="$1"
@@ -38,8 +48,6 @@ function download {
 # Prep
 INCLUDE=""
 LIB=""
-
-echo " --- SETTING UP ENVIRONMENT ---"
 
 # Cygwin Utils
 # preinstalled: git,wget,curl,perl
@@ -164,6 +172,11 @@ export INCLUDE
 export LIB
 export DXSDK_DIR
 
+
+
+
+
+
 echo " --- QMAKE ---"
 
 MumbleVersion="$VERSION" \
@@ -174,10 +187,17 @@ qmake \
 	CONFIG+=no-elevation \
 	CONFIG+=packaged -recursive
 
+
+
+
+
 echo " --- COMPILE ---"
 
 jom clean
 jom -j8 release
+
+
+
 
 echo " --- SIGNING ---"
 
@@ -186,18 +206,19 @@ echo " --- SIGNING ---"
 #/t "http://timestamp.verisign.com/scripts/timstamp.dll" \
 #release/*.exe release/*.dll release/plugins/*.dll
 
-rm -f mumble9000_installer/Mumble9000_install.exe
-rm -f Mumble9000_install.exe
+
+
 
 echo " --- BUILDING INSTALLER ---"
-
-
 
 LIBSNDFILE_DIR="$(cygpath -w "$SNDFILE_DIR")" \
 QT_DIR="$(cygpath -w "$QT_DIR")" \
 OPENSSL_DIR="$(cygpath -w "$OPENSSL_LIB_DIR")" \
 VS_DIR="$(cygpath -w "$VS_DIR")" \
 makensis mumble9000_installer/mumble9000.nsi
+
+
+
 
 echo " --- SIGNING INSTALLER ---"
 
@@ -206,4 +227,11 @@ echo " --- SIGNING INSTALLER ---"
 #/t "http://timestamp.verisign.com/scripts/timstamp.dll" \
 #mumble9000_installer/Mumble9000_install.exe
 
-mv mumble9000_installer/Mumble9000_install.exe "Mumble9000.$VERSION.exe"
+
+
+
+
+
+echo " --- DIST ---"
+
+mv mumble9000_installer/Mumble9000_install.exe "$DIST/Mumble9000.$VERSION.exe"

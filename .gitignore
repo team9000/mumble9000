@@ -33,9 +33,10 @@ doc/doxygen/
 .qmake.cache
 .qmake.stash
 
-/toolchain/
-/cache/
-/tmp/
+/toolchain
+/cache
+/tmp
+/dist
 
 mumble_ol_resource.rc
 celt0_resource.rc
