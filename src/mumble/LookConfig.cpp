@@ -54,11 +54,23 @@ LookConfig::LookConfig(Settings &st) : ConfigWidget(st) {
 
 	qcbLanguage->addItem(tr("System default"));
 	QDir d(QLatin1String(":"),QLatin1String("mumble_*.qm"),QDir::Name,QDir::Files);
-	QStringList langs;
 	foreach(const QString &key, d.entryList()) {
 		QString cc = key.mid(7,key.indexOf(QLatin1Char('.'))-7);
-		langs << cc;
-		qcbLanguage->addItem(cc);
+		QLocale tmpLocale = QLocale(cc);
+
+		//If there is no native language name, use the locale
+		QString displayName = cc;
+		if(!tmpLocale.nativeLanguageName().isEmpty()) {
+			displayName = QString(QLatin1String("%1 (%2)"))
+			        .arg(tmpLocale.nativeLanguageName())
+			        .arg(cc);
+		} else if (cc == QLatin1String("eo")){
+			// Can't initialize QLocale for a countryless language (QTBUG-8452, QTBUG-14592).
+			// We only have one so special case it.
+			displayName = QLatin1String("Esperanto (eo)");
+		}
+		
+		qcbLanguage->addItem(displayName, QVariant(cc));
 	}
 
 	QStringList styles = QStyleFactory::keys();
@@ -109,7 +121,7 @@ void LookConfig::load(const Settings &r) {
 
 
 	for (int i=0;i<qcbLanguage->count();i++) {
-		if (qcbLanguage->itemText(i) == r.qsLanguage) {
+		if (qcbLanguage->itemData(i).toString() == r.qsLanguage) {
 			loadComboBox(qcbLanguage, i);
 			break;
 		}
@@ -132,6 +144,7 @@ void LookConfig::load(const Settings &r) {
 	loadCheckBox(qcbStateInTray, r.bStateInTray);
 	loadCheckBox(qcbShowUserCount, r.bShowUserCount);
 	loadCheckBox(qcbShowContextMenuInMenuBar, r.bShowContextMenuInMenuBar);
+	loadCheckBox(qcbShowTransmitModeComboBox, r.bShowTransmitModeComboBox);
 	loadCheckBox(qcbHighContrast, r.bHighContrast);
 	loadCheckBox(qcbChatBarUseSelection, r.bChatBarUseSelection);
 	loadCheckBox(qcbFilterHidesEmptyChannels, r.bFilterHidesEmptyChannels);
@@ -142,7 +155,7 @@ void LookConfig::save() const {
 	if (qcbLanguage->currentIndex() == 0)
 		s.qsLanguage = QString();
 	else
-		s.qsLanguage = qcbLanguage->currentText();
+		s.qsLanguage = qcbLanguage->itemData(qcbLanguage->currentIndex()).toString();
 
 	if (qcbStyle->currentIndex() == 0)
 		s.qsStyle = QString();
@@ -174,6 +187,7 @@ void LookConfig::save() const {
 	s.bStateInTray = qcbStateInTray->isChecked();
 	s.bShowUserCount = qcbShowUserCount->isChecked();
 	s.bShowContextMenuInMenuBar = qcbShowContextMenuInMenuBar->isChecked();
+	s.bShowTransmitModeComboBox = qcbShowTransmitModeComboBox->isChecked();
 	s.bHighContrast = qcbHighContrast->isChecked();
 	s.bChatBarUseSelection = qcbChatBarUseSelection->isChecked();
 	s.bFilterHidesEmptyChannels = qcbFilterHidesEmptyChannels->isChecked();
@@ -194,6 +208,8 @@ void LookConfig::accept() const {
 		file.open(QFile::ReadOnly);
 		QString sheet = QLatin1String(file.readAll());
 		if (! sheet.isEmpty() && (sheet != qApp->styleSheet())) {
+			QFileInfo fi(g.s.qsSkin);
+			QDir::addSearchPath(QLatin1String("skin"), fi.path());
 			qApp->setStyleSheet(sheet);
 			g.mw->qteLog->document()->setDefaultStyleSheet(sheet);
 		}

@@ -137,6 +137,14 @@ void SocketRPCClient::processXml() {
 					g.mw->qaAudioMute->trigger();
 				}
 			}
+			iter = qmRequest.find(QLatin1String("unmute"));
+			if (iter != qmRequest.constEnd()) {
+				bool set = iter.value().toBool();
+				if (set == g.s.bMute) {
+					g.mw->qaAudioMute->setChecked(set);
+					g.mw->qaAudioMute->trigger();
+				}
+			}
 			iter = qmRequest.find(QLatin1String("deaf"));
 			if (iter != qmRequest.constEnd()) {
 				bool set = iter.value().toBool();
@@ -145,7 +153,14 @@ void SocketRPCClient::processXml() {
 					g.mw->qaAudioDeaf->trigger();
 				}
 			}
-
+			iter = qmRequest.find(QLatin1String("undeaf"));
+			if (iter != qmRequest.constEnd()) {
+				bool set = iter.value().toBool();
+				if (set == g.s.bDeaf) {
+					g.mw->qaAudioDeaf->setChecked(set);
+					g.mw->qaAudioDeaf->trigger();
+				}
+			}
 			ack = true;
 		} else if (request.nodeName() == QLatin1String("url")) {
 			if (g.sh && g.sh->isRunning() && g.uiSession) {
@@ -159,7 +174,7 @@ void SocketRPCClient::processXml() {
 				u.setPort(port);
 				u.setUserName(user);
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+#if QT_VERSION >= 0x050000
 				QUrlQuery query;
 				query.addQueryItem(QLatin1String("version"), QLatin1String("1.2.0"));
 				u.setQuery(query);

@@ -3,12 +3,6 @@ include(../mumble.pri)
 DEFINES *= MURMUR
 TEMPLATE	=app
 CONFIG  *= network
-CONFIG(static):!macx {
-	QMAKE_LFLAGS *= -static
-}
-CONFIG(ermine) {
-	QMAKE_LFLAGS *= -Wl,-rpath,$$(MUMBLE_PREFIX)/lib:$$(MUMBLE_ICE_PREFIX)/lib
-}
 CONFIG	-= gui
 QT *= network sql xml
 QT -= gui
@@ -16,8 +10,8 @@ TARGET = murmur
 DBFILE  = murmur.db
 LANGUAGE	= C++
 FORMS =
-HEADERS *= Server.h ServerUser.h Meta.h
-SOURCES *= main.cpp Server.cpp ServerUser.cpp ServerDB.cpp Register.cpp Cert.cpp Messages.cpp Meta.cpp RPC.cpp
+HEADERS *= Server.h ServerUser.h Meta.h PBKDF2.h
+SOURCES *= main.cpp Server.cpp ServerUser.cpp ServerDB.cpp Register.cpp Cert.cpp Messages.cpp Meta.cpp RPC.cpp PBKDF2.cpp
 
 DIST = DBus.h ServerDB.h ../../icons/murmur.ico Murmur.ice MurmurI.h MurmurIceWrapper.cpp murmur.plist
 PRECOMPILED_HEADER = murmur_pch.h
@@ -50,6 +44,14 @@ win32 {
 unix {
   contains(UNAME, Linux) {
     LIBS *= -lcap
+  }
+
+  CONFIG(static):!macx {
+    QMAKE_LFLAGS *= -static
+  }
+
+  CONFIG(ermine) {
+    QMAKE_LFLAGS *= -Wl,-rpath,$$(MUMBLE_PREFIX)/lib:$$(MUMBLE_ICE_PREFIX)/lib
   }
 
   HEADERS *= UnixMurmur.h
@@ -106,8 +108,16 @@ ice {
 			QMAKE_LIBDIR *= "$$ICE_PATH/lib/vc100"
 		} else {
 			DEFINES *= ICE_STATIC_LIBS
-			QMAKE_LIBDIR *= $$ICE_PATH/lib $$BZIP2_PATH/lib
-			LIBS *= -llibbz2 -ldbghelp -liphlpapi -lrpcrt4
+			QMAKE_LIBDIR *= $$BZIP2_PATH/lib
+			equals(QMAKE_TARGET.arch, x86) {
+				QMAKE_LIBDIR *= $$ICE_PATH/lib
+			}
+			equals(QMAKE_TARGET.arch, x86_64) {
+				QMAKE_LIBDIR *= $$ICE_PATH/lib/x64
+			}
+			CONFIG(release, debug|release): LIBS *= -llibbz2
+			CONFIG(debug, debug|release):   LIBS *= -llibbz2d
+			LIBS *= -ldbghelp -liphlpapi -lrpcrt4
 		}
 	}
 

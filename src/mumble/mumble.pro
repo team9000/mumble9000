@@ -62,22 +62,163 @@ isEqual(QT_MAJOR_VERSION, 5) {
   macx:QT *= gui-private
 }
 
-HEADERS		*= BanEditor.h ACLEditor.h ConfigWidget.h Log.h AudioConfigDialog.h AudioStats.h AudioInput.h AudioOutput.h AudioOutputSample.h AudioOutputSpeech.h AudioOutputUser.h CELTCodec.h CustomElements.h MainWindow.h ServerHandler.h About.h ConnectDialog.h GlobalShortcut.h TextToSpeech.h Settings.h Database.h VersionCheck.h Global.h UserModel.h Audio.h ConfigDialog.h Plugins.h PTTButtonWidget.h LookConfig.h Overlay.h OverlayText.h SharedMemory.h AudioWizard.h ViewCert.h TextMessage.h NetworkConfig.h LCD.h Usage.h Cert.h ClientUser.h UserEdit.h UserListModel.h Tokens.h UserView.h RichTextEditor.h UserInformation.h SocketRPC.h VoiceRecorder.h VoiceRecorderDialog.h WebFetch.h ../SignalCurry.h \
+HEADERS *= BanEditor.h \
+    ACLEditor.h \
+    ConfigWidget.h \
+    Log.h \
+    AudioConfigDialog.h \
+    AudioStats.h \
+    AudioInput.h \
+    AudioOutput.h \
+    AudioOutputSample.h \
+    AudioOutputSpeech.h \
+    AudioOutputUser.h \
+    CELTCodec.h \
+    CustomElements.h \
+    MainWindow.h \
+    ServerHandler.h \
+    About.h \
+    ConnectDialog.h \
+    GlobalShortcut.h \
+    TextToSpeech.h \
+    Settings.h \
+    Database.h \
+    VersionCheck.h \
+    Global.h \
+    UserModel.h \
+    Audio.h \
+    ConfigDialog.h \
+    Plugins.h \
+    PTTButtonWidget.h \
+    LookConfig.h \
+    Overlay.h \
+    OverlayText.h \
+    SharedMemory.h \
+    AudioWizard.h \
+    ViewCert.h \
+    TextMessage.h \
+    NetworkConfig.h \
+    LCD.h \
+    Usage.h \
+    Cert.h \
+    ClientUser.h \
+    UserEdit.h \
+    UserListModel.h \
+    Tokens.h \
+    UserView.h \
+    RichTextEditor.h \
+    UserInformation.h \
+    SocketRPC.h \
+    VoiceRecorder.h \
+    VoiceRecorderDialog.h \
+    WebFetch.h \
+    ../SignalCurry.h \
     OverlayClient.h \
     OverlayUser.h \
     OverlayUserGroup.h \
     OverlayConfig.h \
     OverlayEditor.h \
-    OverlayEditorScene.h
-HEADERS *= M9Config.h
-SOURCES		*= BanEditor.cpp ACLEditor.cpp ConfigWidget.cpp Log.cpp AudioConfigDialog.cpp AudioStats.cpp AudioInput.cpp AudioOutput.cpp AudioOutputSample.cpp AudioOutputSpeech.cpp AudioOutputUser.cpp main.cpp CELTCodec.cpp CustomElements.cpp MainWindow.cpp ServerHandler.cpp About.cpp ConnectDialog.cpp Settings.cpp Database.cpp VersionCheck.cpp Global.cpp UserModel.cpp Audio.cpp ConfigDialog.cpp Plugins.cpp PTTButtonWidget.cpp LookConfig.cpp OverlayClient.cpp OverlayConfig.cpp OverlayEditor.cpp OverlayEditorScene.cpp OverlayUser.cpp OverlayUserGroup.cpp Overlay.cpp OverlayText.cpp SharedMemory.cpp AudioWizard.cpp ViewCert.cpp Messages.cpp TextMessage.cpp GlobalShortcut.cpp NetworkConfig.cpp LCD.cpp Usage.cpp Cert.cpp ClientUser.cpp UserEdit.cpp UserListModel.cpp Tokens.cpp UserView.cpp RichTextEditor.cpp UserInformation.cpp SocketRPC.cpp VoiceRecorder.cpp VoiceRecorderDialog.cpp WebFetch.cpp
-SOURCES *= smallft.cpp
-SOURCES *= M9Config.cpp
+    OverlayEditorScene.h \
+    MumbleApplication.h \
+    ApplicationPalette.h
+
+SOURCES *= BanEditor.cpp \
+    ACLEditor.cpp \
+    ConfigWidget.cpp \
+    Log.cpp \
+    AudioConfigDialog.cpp \
+    AudioStats.cpp \
+    AudioInput.cpp \
+    AudioOutput.cpp \
+    AudioOutputSample.cpp \
+    AudioOutputSpeech.cpp \
+    AudioOutputUser.cpp \
+    main.cpp \
+    CELTCodec.cpp \
+    CustomElements.cpp \
+    MainWindow.cpp \
+    ServerHandler.cpp \
+    About.cpp \
+    ConnectDialog.cpp \
+    Settings.cpp \
+    Database.cpp \
+    VersionCheck.cpp \
+    Global.cpp \
+    UserModel.cpp \
+    Audio.cpp \
+    ConfigDialog.cpp \
+    Plugins.cpp \
+    PTTButtonWidget.cpp \
+    LookConfig.cpp \
+    OverlayClient.cpp \
+    OverlayConfig.cpp \
+    OverlayEditor.cpp \
+    OverlayEditorScene.cpp \
+    OverlayUser.cpp \
+    OverlayUserGroup.cpp \
+    Overlay.cpp \
+    OverlayText.cpp \
+    SharedMemory.cpp \
+    AudioWizard.cpp \
+    ViewCert.cpp \
+    Messages.cpp \
+    TextMessage.cpp \
+    GlobalShortcut.cpp \
+    NetworkConfig.cpp \
+    LCD.cpp \
+    Usage.cpp \
+    Cert.cpp \
+    ClientUser.cpp \
+    UserEdit.cpp \
+    UserListModel.cpp \
+    Tokens.cpp \
+    UserView.cpp \
+    RichTextEditor.cpp \
+    UserInformation.cpp \
+    SocketRPC.cpp \
+    VoiceRecorder.cpp \
+    VoiceRecorderDialog.cpp \
+    WebFetch.cpp \
+    MumbleApplication.cpp \
+    smallft.cpp
+
 DIST		*= ../../icons/mumble.ico licenses.h smallft.h ../../icons/mumble.xpm murmur_pch.h mumble.plist
-RESOURCES	*= mumble.qrc mumble_flags.qrc
-FORMS	*= ConfigDialog.ui MainWindow.ui ConnectDialog.ui ConnectDialogEdit.ui BanEditor.ui ACLEditor.ui Plugins.ui PTTButtonWidget.ui Overlay.ui OverlayEditor.ui LookConfig.ui AudioInput.ui AudioOutput.ui Log.ui TextMessage.ui AudioStats.ui NetworkConfig.ui LCD.ui GlobalShortcut.ui GlobalShortcutTarget.ui Cert.ui UserEdit.ui AudioWizard.ui Tokens.ui RichTextEditor.ui RichTextEditorLink.ui UserInformation.ui VoiceRecorderDialog.ui
+RESOURCES	*= mumble.qrc mumble_translations.qrc mumble_flags.qrc
+FORMS *= ConfigDialog.ui \
+    MainWindow.ui \
+    ConnectDialog.ui \
+    ConnectDialogEdit.ui \
+    BanEditor.ui \
+    ACLEditor.ui \
+    Plugins.ui \
+    PTTButtonWidget.ui \
+    Overlay.ui \
+    OverlayEditor.ui \
+    LookConfig.ui \
+    AudioInput.ui \
+    AudioOutput.ui \
+    Log.ui \
+    TextMessage.ui \
+    AudioStats.ui \
+    NetworkConfig.ui \
+    LCD.ui \
+    GlobalShortcut.ui \
+    GlobalShortcutTarget.ui \
+    Cert.ui \
+    UserEdit.ui \
+    AudioWizard.ui \
+    Tokens.ui \
+    RichTextEditor.ui \
+    RichTextEditorLink.ui \
+    UserInformation.ui \
+    VoiceRecorderDialog.ui
+
+HEADERS *= M9Config.h
+SOURCES *= M9Config.cpp
 FORMS *= M9Config.ui
-TRANSLATIONS	= mumble_cs.ts mumble_da.ts mumble_de.ts mumble_en.ts mumble_es.ts mumble_fr.ts mumble_he.ts mumble_hu.ts mumble_it.ts mumble_ja.ts mumble_nl.ts mumble_pl.ts mumble_pt_BR.ts mumble_pt_PT.ts mumble_ru.ts mumble_sv.ts mumble_tr.ts mumble_zh_CN.ts mumble_zh_TW.ts
+
+# Include TRANSLATIONS variable
+include(translations.pri)
 
 PRECOMPILED_HEADER = mumble_pch.hpp
 INCLUDEPATH *= ../bonjour
@@ -98,7 +239,12 @@ CONFIG(static) {
 
 isEmpty(QMAKE_LRELEASE) {
   QMAKE_QMAKE_BASE = $$basename(QMAKE_QMAKE)
-  QMAKE_LRELEASE = $$dirname(QMAKE_QMAKE)/$$replace(QMAKE_QMAKE_BASE,qmake,lrelease)
+  QMAKE_LRELEASE_PATH = $$dirname(QMAKE_QMAKE)/$$replace(QMAKE_QMAKE_BASE,qmake,lrelease)
+  isEqual(QT_MAJOR_VERSION, 5) {
+    QMAKE_LRELEASE = $$shell_path($$QMAKE_LRELEASE_PATH)
+  } else {
+    QMAKE_LRELEASE = $$QMAKE_LRELEASE_PATH
+  }
 }
 
 unix:!CONFIG(bundled-speex):system(pkg-config --atleast-version=1.2 speexdsp) {
@@ -123,14 +269,14 @@ CONFIG(no-bundled-speex) {
 }
 
 !CONFIG(no-bundled-speex) {
-  INCLUDEPATH	*= ../../speex/include ../../speex/libspeex ../../speexbuild
+  INCLUDEPATH	*= ../../3rdparty/speex-src/include ../../3rdparty/speex-src/libspeex ../../3rdparty/speex-build
   LIBS 		*= -lspeex
 }
 
 CONFIG(sbcelt) {
   SOURCES -= CELTCodec.cpp
   SOURCES += CELTCodec_sbcelt.cpp
-  INCLUDEPATH *= ../../celt-0.7.0-src/libcelt ../../sbcelt-src
+  INCLUDEPATH *= ../../3rdparty/celt-0.7.0-src/libcelt ../../3rdparty/sbcelt-src
   LIBS *= -lcelt -lsbcelt
   DEFINES *= SBCELT_PREFIX_API SBCELT_COMPAT_API USE_SBCELT
 } else {
@@ -141,15 +287,15 @@ CONFIG(sbcelt) {
     INCLUDEPATH	*= /usr/include/celt
   }
   !CONFIG(no-bundled-celt) {
-    INCLUDEPATH	*= ../../celt-0.7.0-src/libcelt
+    INCLUDEPATH	*= ../../3rdparty/celt-0.7.0-src/libcelt
   }
 }
 
 !win32 {
   QMAKE_CXXFLAGS	*= -Wall -Wextra
 } else {
-QMAKE_CFLAGS_RELEASE -= -Zc:strictStrings
-QMAKE_CXXFLAGS_RELEASE -= -Zc:strictStrings
+  QMAKE_CFLAGS_RELEASE -= -Zc:strictStrings
+  QMAKE_CXXFLAGS_RELEASE -= -Zc:strictStrings
 }
 
 !win32:!macx:!CONFIG(no-dbus) {
@@ -177,7 +323,7 @@ unix:!CONFIG(bundled-opus):system(pkg-config --exists opus) {
   }
 
   CONFIG(opus) {
-    INCLUDEPATH *= ../../opus-src/celt ../../opus-src/include ../../opus-src/src ../../opus-build/src
+    INCLUDEPATH *= ../../3rdparty/opus-src/celt ../../3rdparty/opus-src/include ../../3rdparty/opus-src/src ../../3rdparty/opus-build/src
     DEFINES *= USE_OPUS
     LIBS *= -lopus
   }
@@ -189,10 +335,16 @@ win32 {
   } else {
     RC_FILE = mumble.rc
   }
-  HEADERS	*= GlobalShortcut_win.h TaskList.h
+  HEADERS	*= GlobalShortcut_win.h Overlay_win.h TaskList.h
   SOURCES	*= GlobalShortcut_win.cpp TextToSpeech_win.cpp Overlay_win.cpp SharedMemory_win.cpp Log_win.cpp os_win.cpp TaskList.cpp ../../overlay/HardHook.cpp ../../overlay/ods.cpp
-  LIBS		*= -l"$$(DXSDK_DIR)Lib/x86/dxguid" -l"$$(DXSDK_DIR)Lib/x86/dinput8" -lsapi -lole32 -lws2_32 -ladvapi32 -lwintrust -ldbghelp -llibsndfile-1 -lshell32 -lshlwapi -luser32 -lgdi32
+  LIBS		*= -ldxguid -ldinput8 -lsapi -lole32 -lws2_32 -ladvapi32 -lwintrust -ldbghelp -llibsndfile-1 -lshell32 -lshlwapi -luser32 -lgdi32 -lpsapi
   LIBS		*= -ldelayimp -delayload:speex.dll -delayload:shell32.dll
+
+  equals(QMAKE_TARGET.arch, x86_64) {
+    DEFINES += USE_MINHOOK
+    INCLUDEPATH *= ../../3rdparty/minhook-src/include
+    LIBS *= -lminhook
+  }
 
   DEFINES	*= WIN32
   !CONFIG(no-asio) {
@@ -229,10 +381,10 @@ unix {
   }
 
   !CONFIG(no-bundled-speex) {
-    QMAKE_CFLAGS *= -I../../speex/include -I../../speexbuild
-    QMAKE_CXXFLAGS *= -I../../speex/include -I../../speexbuild
-    QMAKE_CXXFLAGS_RELEASE *= -I../../speex/include -I../../speexbuild
-    QMAKE_CXXFLAGS_DEBUG *= -I../../speex/include -I../../speexbuild
+    QMAKE_CFLAGS *= -I../../3rdparty/speex-src/include -I../../3rdparty/speex-build
+    QMAKE_CXXFLAGS *= -I../../3rdparty/speex-src/include -I../../3rdparty/speex-build
+    QMAKE_CXXFLAGS_RELEASE *= -I../../3rdparty/speex-src/include -I../../3rdparty/speex-build
+    QMAKE_CXXFLAGS_DEBUG *= -I../../3rdparty/speex-src/include -I../../3rdparty/speex-build
   }
 
   CONFIG *= link_pkgconfig
@@ -433,10 +585,19 @@ CONFIG(no-update) {
 CONFIG(static_qt_plugins) {
   DEFINES += USE_STATIC_QT_PLUGINS
   QTPLUGIN += qtaccessiblewidgets qico qsvg qsvgicon
+
+  # The accessiblewidgets plugin is not needed for Qt 5.4 and greater,
+  # where it is integrated into the QtWidgets library.
+  # See QTBUG-43007 for more information.
+  isEqual(QT_MAJOR_VERSION, 5):greaterThan(QT_MINOR_VERSION, 3) {
+    QTPLUGIN -= qtaccessiblewidgets
+  }
+
   macx {
-    QTPLUGIN += qicnsicon
     isEqual(QT_MAJOR_VERSION, 5) {
-      QTPLUGIN += qcocoa
+      QTPLUGIN += qicns qcocoa
+    } else {
+      QTPLUGIN += qicnsicon
     }
   }
 

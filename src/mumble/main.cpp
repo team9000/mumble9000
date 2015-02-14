@@ -55,8 +55,10 @@
 #include "NetworkConfig.h"
 #include "CrashReporter.h"
 #include "SocketRPC.h"
+#include "MumbleApplication.h"
+#include "ApplicationPalette.h"
 
-#if defined(USE_STATIC_QT_PLUGINS) && QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
+#if defined(USE_STATIC_QT_PLUGINS) && QT_VERSION < 0x050000
 Q_IMPORT_PLUGIN(qtaccessiblewidgets)
 Q_IMPORT_PLUGIN(qico)
 Q_IMPORT_PLUGIN(qsvg)
@@ -77,95 +79,6 @@ namespace boost {
 extern void os_init();
 extern char *os_lang;
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0) && defined(Q_OS_WIN)
-# define QAPP_INHERIT_EVENT_FILTER , public QAbstractNativeEventFilter
-#else
-# define QAPP_INHERIT_EVENT_FILTER
-#endif
-
-class QAppMumble : public QApplication QAPP_INHERIT_EVENT_FILTER {
-	public:
-		QUrl quLaunchURL;
-		QAppMumble(int &pargc, char **pargv) : QApplication(pargc, pargv) {}
-		void commitData(QSessionManager&);
-		bool event(QEvent *e);
-#ifdef Q_OS_WIN
-# if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
-		bool QAppMumble::nativeEventFilter(const QByteArray &eventType, void *message, long *result);
-# else
-		bool winEventFilter(MSG *msg, long *result);
-# endif
-#endif
-};
-
-void QAppMumble::commitData(QSessionManager &) {
-	// Make sure the config is saved and supress the ask on quite message
-	if (g.mw) {
-		g.s.save();
-		g.mw->bSuppressAskOnQuit = true;
-	}
-}
-
-bool QAppMumble::event(QEvent *e) {
-	if (e->type() == QEvent::FileOpen) {
-		QFileOpenEvent *foe = static_cast<QFileOpenEvent *>(e);
-		if (! g.mw) {
-			this->quLaunchURL = foe->url();
-		} else {
-			g.mw->openUrl(foe->url());
-		}
-		return true;
-	}
-	return QApplication::event(e);
-}
-
-#ifdef Q_OS_WIN
-# if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
-bool QAppMumble::nativeEventFilter(const QByteArray &eventType, void *message, long *result) {
-	Q_UNUSED(eventType);
-	MSG *msg = reinterpret_cast<MSG *>(message);
-
-	if (QThread::currentThread() == thread()) {
-		if (Global::g_global_struct && g.ocIntercept) {
-			switch (msg->message) {
-				case WM_MOUSELEAVE:
-					*result = 0;
-					return true;
-				case WM_KEYDOWN:
-				case WM_KEYUP:
-				case WM_SYSKEYDOWN:
-				case WM_SYSKEYUP:
-					GlobalShortcutEngine::engine->prepareInput();
-				default:
-					break;
-			}
-		}
-	}
-	return false;
-}
-# else
-bool QAppMumble::winEventFilter(MSG *msg, long *result) {
-	if (QThread::currentThread() == thread()) {
-		if (Global::g_global_struct && g.ocIntercept) {
-			switch (msg->message) {
-				case WM_MOUSELEAVE:
-					*result = 0;
-					return true;
-				case WM_KEYDOWN:
-				case WM_KEYUP:
-				case WM_SYSKEYDOWN:
-				case WM_SYSKEYUP:
-					GlobalShortcutEngine::engine->prepareInput();
-				default:
-					break;
-			}
-		}
-	}
-	return QApplication::winEventFilter(msg, result);
-}
-# endif
-#endif
-
 #if defined(Q_OS_WIN) && !defined(QT_NO_DEBUG)
 extern "C" _declspec(dllexport) int main(int argc, char **argv) {
 #else
@@ -184,13 +97,17 @@ int main(int argc, char **argv) {
 #endif
 
 	// Initialize application object.
-	QAppMumble a(argc, argv);
+	MumbleApplication a(argc, argv);
 	a.setApplicationName(QLatin1String("Mumble"));
 	a.setOrganizationName(QLatin1String("Mumble"));
 	a.setOrganizationDomain(QLatin1String("mumble.sourceforge.net"));
 	a.setQuitOnLastWindowClosed(false);
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0) && defined(Q_OS_WIN)
+#if QT_VERSION >= 0x050100
+	a.setAttribute(Qt::AA_UseHighDpiPixmaps);
+#endif
+
+#if QT_VERSION >= 0x050000 && defined(Q_OS_WIN)
 	a.installNativeEventFilter(&a);
 #endif
 
@@ -212,6 +129,8 @@ int main(int argc, char **argv) {
 #endif
 
 	bool bAllowMultiple = false;
+	bool bRpcMode = false;
+	QString rpcCommand;
 	QUrl url;
 	if (a.arguments().count() > 1) {
 		QStringList args = a.arguments();
@@ -221,7 +140,8 @@ int main(int argc, char **argv) {
 				|| args.at(i) == QLatin1String("/?")
 #endif
 			) {
-				QString helpmessage = MainWindow::tr( "Usage: mumble [options] [<url>]\n"
+				QString helpMessage = MainWindow::tr(
+					"Usage: mumble [options] [<url>]\n"
 					"\n"
 					"<url> specifies a URL to connect to after startup instead of showing\n"
 					"the connection window, and has the following form:\n"
@@ -236,25 +156,69 @@ int main(int argc, char **argv) {
 					"                Allow multiple instances of the client to be started.\n"
 					"  -n, --noidentity\n"
 					"                Suppress loading of identity files (i.e., certificates.)\n"
-					);
+					"\n"
+				);
+				QString rpcHelpBanner = MainWindow::tr(
+					"Remote controlling Mumble:\n"
+					"\n"
+				);
+				QString rpcHelpMessage = MainWindow::tr(
+					"Usage: mumble rpc <action> [options]\n"
+					"\n"
+					"It is possible to remote control a running instance of Mumble by using\n"
+					"the 'mumble rpc' command.\n"
+					"\n"
+					"Valid actions are:\n"
+					"  mute\n"
+					"                Mute self\n"
+					"  unmute\n"
+					"                Unmute self\n"
+					"  deaf\n"
+					"                Deafen self\n"
+					"  undeaf\n"
+					"                Undeafen self\n"
+					"\n"
+				);
+
+				QString helpOutput = helpMessage + rpcHelpBanner + rpcHelpMessage;
+				if (bRpcMode) {
+					helpOutput = rpcHelpMessage;
+				}
+
 #if defined(Q_OS_WIN)
-				QMessageBox::information(NULL, MainWindow::tr("Invocation"), helpmessage);
+				QMessageBox::information(NULL, MainWindow::tr("Invocation"), helpOutput);
 #else
-				printf("%s", qPrintable(helpmessage));
+				printf("%s", qPrintable(helpOutput));
 #endif
 				return 1;
 			} else if (args.at(i) == QLatin1String("-m") || args.at(i) == QLatin1String("--multiple")) {
 				bAllowMultiple = true;
 			} else if (args.at(i) == QLatin1String("-n") || args.at(i) == QLatin1String("--noidentity")) {
 				g.s.bSuppressIdentity = true;
+			} else if (args.at(i) == QLatin1String("rpc")) {
+				bRpcMode = true;
+				if (args.count() - 1 > i) {
+					rpcCommand = QString(args.at(i + 1));
+				}
+				else {
+					QString rpcError = MainWindow::tr("Error: No RPC command specified");
+#if defined(Q_OS_WIN)
+					QMessageBox::information(NULL, MainWindow::tr("RPC"), rpcError);
+#else
+					printf("%s\n", qPrintable(rpcError));
+#endif
+					return 1;
+				}
 			} else {
-				QUrl u = QUrl::fromEncoded(args.at(i).toUtf8());
-				if (u.isValid() && (u.scheme() == QLatin1String("mumble"))) {
-					url = u;
-				} else {
-					QFile f(args.at(i));
-					if (f.exists()) {
-						url = QUrl::fromLocalFile(f.fileName());
+				if (!bRpcMode) {
+					QUrl u = QUrl::fromEncoded(args.at(i).toUtf8());
+					if (u.isValid() && (u.scheme() == QLatin1String("mumble"))) {
+						url = u;
+					} else {
+						QFile f(args.at(i));
+						if (f.exists()) {
+							url = QUrl::fromLocalFile(f.fileName());
+						}
 					}
 				}
 			}
@@ -280,6 +244,18 @@ int main(int argc, char **argv) {
 	}
 #endif
 #endif
+
+	if (bRpcMode) {
+		bool sent = false;
+		QMap<QString, QVariant> param;
+		param.insert(rpcCommand, rpcCommand);
+		sent = SocketRPC::send(QLatin1String("Mumble"), QLatin1String("self"), param);
+		if (sent) {
+			return 0;
+		} else {
+			return 1;
+		}
+	}
 
 	if (! bAllowMultiple) {
 		if (url.isValid()) {
@@ -333,11 +309,13 @@ int main(int argc, char **argv) {
 
 	DeferInit::run_initializers();
 
+	ApplicationPalette applicationPalette;
+	
 	if (! g.s.qsStyle.isEmpty()) {
 		a.setStyle(g.s.qsStyle);
 		g.qsCurrentStyle = g.s.qsStyle;
 	}
-
+	
 	if (! g.s.qsSkin.isEmpty()) {
 		QFile file(g.s.qsSkin);
 		file.open(QFile::ReadOnly);
@@ -468,7 +446,7 @@ int main(int argc, char **argv) {
 	g.s.uiUpdateCounter = 2;
 
 	if (! CertWizard::validateCert(g.s.kpCertificate)) {
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+#if QT_VERSION >= 0x050000
 		QDir qd(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
 #else
 		QDir qd(QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation));

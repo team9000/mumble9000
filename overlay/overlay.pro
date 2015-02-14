@@ -7,8 +7,9 @@ CONFIG -= qt
 CONFIG *= dll shared debug_and_release warn_on
 CONFIG -= embed_manifest_dll
 TARGET = mumble_ol
+RC_FILE = mumble_ol.rc
 SOURCES = lib.cpp d3d9.cpp dxgi.cpp d3d10.cpp d3d11.cpp ods.cpp opengl.cpp HardHook.cpp D11StateBlock.cpp
-HEADERS = lib.h ods.h HardHook.h overlay_blacklist.h D11StateBlock.h
+HEADERS = lib.h ods.h HardHook.h overlay_blacklist.h D11StateBlock.h ../3rdparty/GL/glext.h
 EFFECTS = overlay.fx
 DIST = overlay.h overlay.fx HardHook.h
 FX11DIR = "../3rdparty/fx11-src"
@@ -24,16 +25,24 @@ QMAKE_CXXFLAGS_DEBUG	*= -MTd
 
 INCLUDEPATH *= "$$FX11DIR/inc"
 
-LIBS *= -l"$$(DXSDK_DIR)Lib/x86/dxguid" -luuid -lole32 -luser32 -ladvapi32
-LIBS *= "$$(DXSDK_DIR)Lib/x86/*"
+LIBS *= -ldxguid -luuid -lole32 -luser32 -ladvapi32
+LIBS *= -ld3d9 -ld3d10 -ld3d11 -ld3dcompiler -ld3dx9 -ld3dx10 -ld3dx11 -ldxgi
+
+equals(QMAKE_TARGET.arch, x86_64) {
+  DEFINES += USE_MINHOOK
+  INCLUDEPATH *= ../3rdparty/minhook-src/include
+  LIBS *= -lminhook
+}
 
 CONFIG(release, debug|release) {
   DESTDIR = ../release
+  QMAKE_LIBDIR += ../release
   LIBS *= -l$$FX11DIR_BUILD/release/effects11
 }
 
 CONFIG(debug, debug|release) {
   DESTDIR = ../debug
+  QMAKE_LIBDIR += ../debug
   DEFINES *= DEBUG
   LIBS *= -l$$FX11DIR_BUILD/debug/effects11
 }

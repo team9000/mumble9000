@@ -30,7 +30,7 @@
 
 #include "mumble_pch.hpp"
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+#if QT_VERSION >= 0x050000
 # include <qpa/qplatformnativeinterface.h>
 #endif
 
@@ -88,7 +88,7 @@ static void mumbleMessageOutput(QtMsgType type, const char *msg) {
 	mumbleMessageOutputQString(type, QString::fromUtf8(msg));
 }
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+#if QT_VERSION >= 0x050000
 static void mumbleMessageOutputWithContext(QtMsgType type, const QMessageLogContext &ctx, const QString &msg) {
 	Q_UNUSED(ctx);
 	mumbleMessageOutputQString(type, msg);
@@ -250,7 +250,7 @@ void os_init() {
 	fConsole = _wfsopen(console.toStdWString().c_str(), L"a+", _SH_DENYWR);
 
 	if (fConsole) {
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+#if QT_VERSION >= 0x050000
 		qInstallMessageHandler(mumbleMessageOutputWithContext);
 #else
 		qInstallMsgHandler(mumbleMessageOutput);
@@ -303,7 +303,7 @@ DWORD WinVerifySslCert(const QByteArray& cert) {
 		return errorStatus;
 	}
 
-	LPSTR usage[] = {
+	LPCSTR usage[] = {
 		szOID_PKIX_KP_SERVER_AUTH,
 		szOID_SERVER_GATED_CRYPTO,
 		szOID_SGC_NETSCAPE
@@ -314,7 +314,7 @@ DWORD WinVerifySslCert(const QByteArray& cert) {
 	chainParameter.cbSize = sizeof(CERT_CHAIN_PARA);
 	chainParameter.RequestedUsage.dwType = USAGE_MATCH_TYPE_OR;
 	chainParameter.RequestedUsage.Usage.cUsageIdentifier = ARRAYSIZE(usage);
-	chainParameter.RequestedUsage.Usage.rgpszUsageIdentifier = usage;
+	chainParameter.RequestedUsage.Usage.rgpszUsageIdentifier = const_cast<LPSTR *>(usage);
 
 	PCCERT_CHAIN_CONTEXT chainContext = NULL;
 	CertGetCertificateChain(NULL, certContext, NULL, NULL, &chainParameter, 0, NULL, &chainContext);
@@ -330,7 +330,7 @@ DWORD WinVerifySslCert(const QByteArray& cert) {
 }
 
 HWND MumbleHWNDForQWidget(QWidget *widget) {
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+#if QT_VERSION >= 0x050000
 	QWindow *window = widget->windowHandle();
 	if (window == NULL) {
 		QWidget *npw = widget->nativeParentWidget();

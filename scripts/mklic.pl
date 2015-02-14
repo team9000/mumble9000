@@ -65,15 +65,16 @@ print $F "\n\n";
 
 # List of 3rd party licenses  [<variableName>, <pathToLicenseFile>, <DisplayName>, <URL>]
 my @thirdPartyLicenses = (
-    ["licenseCELT", "../celt-0.11.0-src/COPYING", "CELT", "http://www.celt-codec.org/"],
-    ["licenseOpus", "../opus-src/COPYING", "Opus", "http://www.opus-codec.org/"],
-    ["licenseSPEEX", "../speex/COPYING", "Speex", "http://www.speex.org/"],
+    ["licenseCELT", "../3rdparty/celt-0.11.0-src/COPYING", "CELT", "http://www.celt-codec.org/"],
+    ["licenseOpus", "../3rdparty/opus-src/COPYING", "Opus", "http://www.opus-codec.org/"],
+    ["licenseSPEEX", "../3rdparty/speex-src/COPYING", "Speex", "http://www.speex.org/"],
     ["licenseOpenSSL", "../3rdPartyLicenses/openssl_license.txt", "OpenSSL", "http://www.openssl.org/"],
     ["licenseLibsndfile", "../3rdPartyLicenses/libsndfile_license.txt", "libsndfile", "http://www.mega-nerd.com/libsndfile/"],
     ["licenseOgg", "../3rdPartyLicenses/libogg_license.txt", "libogg", "http://www.xiph.org/"],
     ["licenseVorbis", "../3rdPartyLicenses/libvorbis_license.txt", "libvorbis", "http://www.xiph.org/"],
     ["licenseFLAC", "../3rdPartyLicenses/libflac_license.txt", "libFLAC", "http://flac.sourceforge.net/"],
     ["licenseMachOverride", "../3rdPartyLicenses/mach_override_license.txt", "mach_override", "https://github.com/rentzsch/mach_star", "Q_OS_MAC"],
+    ["licenseMinHook", "../3rdPartyLicenses/minhook_license.txt", "MinHook", "https://github.com/TsudaKageyu/minhook", "Q_OS_WIN64"],
     ["licenseQtTranslations", "../src/mumble/qttranslations/LICENSE",
         "Additional Qt translations", "https://www.virtualbox.org/ticket/2018", "USING_BUNDLED_QT_TRANSLATIONS"],
     ["licenseFilterSvg", "../icons/filter.txt", "filter.svg icon", "https://commons.wikimedia.org/wiki/File:Filter.svg"],

@@ -26,7 +26,8 @@
 
 #ifdef Q_OS_WIN
 #include <QtGui/QtGui>
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+#if QT_VERSION >= 0x050000
+# include "Qt4Compat.h"
 # include <QtWidgets/QtWidgets>
 #endif
 #include <winsock2.h>
@@ -44,6 +45,7 @@ extern "C" {
 #include <openssl/pem.h>
 #include <openssl/conf.h>
 #include <openssl/x509v3.h>
+#include <openssl/err.h>
 /* OpenSSL defines set_key. This breaks our protobuf-generated setters. */
 #undef set_key
 
@@ -58,6 +60,7 @@ extern "C" {
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <syslog.h>
 #ifdef Q_OS_LINUX
 #include <linux/types.h> // needed to work around evil magic stuff in capability.h
 #include <sys/capability.h>

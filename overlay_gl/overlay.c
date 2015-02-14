@@ -1,4 +1,5 @@
 /* Copyright (C) 2005-2011, Thorvald Natvig <thorvald@natvig.com>
+   Copyright (C) 2008-2015, Mikkel Krautz <mikkel@krautz.dk>
 
    All rights reserved.
 
@@ -31,11 +32,7 @@
 #define GLX_GLXEXT_LEGACY
 #define GL_GLEXT_PROTOTYPES
 #define _GNU_SOURCE
-#include <GL/glx.h>
-#include <GL/gl.h>
-#include <GL/glext.h>
 #include <dlfcn.h>
-#include <link.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -56,21 +53,45 @@
 #include <errno.h>
 #include <time.h>
 
+#if defined(TARGET_UNIX)
+# define GLX_GLXEXT_LEGACY
+# define GL_GLEXT_PROTOTYPES
+# define _GNU_SOURCE
+# include <GL/glx.h>
+# include <GL/gl.h>
+# include <GL/glext.h>
+
+#include <link.h>
+
 typedef unsigned char bool;
-#define true 1
-#define false 0
+# define true 1
+# define false 0
+#elif defined(TARGET_MAC)
+# include <OpenGL/OpenGL.h>
+# include <Carbon/Carbon.h>
+# include <Cocoa/Cocoa.h>
+# include <AGL/AGL.h>
+#
+# include <objc/objc-runtime.h>
+#
+# include "avail_mac.h"
+#endif
 
 #include "../overlay/overlay.h"
 
-// Prototypes
-static void ods(const char *format, ...);
-
-static bool bDebug;
+static bool bDebug = false;
+static bool bCursorAvail = false;
 
 typedef struct _Context {
 	struct _Context *next;
+
+#if defined(TARGET_UNIX)
 	Display *dpy;
 	GLXDrawable draw;
+#elif defined(TARGET_MAC)
+	CGLContextObj cglctx;
+	NSOpenGLContext *nsctx;
+#endif
 
 	unsigned int uiWidth, uiHeight;
 	unsigned int uiLeft, uiRight, uiTop, uiBottom;
@@ -93,6 +114,9 @@ typedef struct _Context {
 
 	clock_t timeT;
 	unsigned int frameCount;
+
+	GLint maxVertexAttribs;
+	GLboolean* vertexAttribStates;
 } Context;
 
 static const char vshader[] = ""
@@ -111,35 +135,23 @@ const GLfloat fBorder[] = {0.125f, 0.250f, 0.5f, 0.75f};
 
 static Context *contexts = NULL;
 
+#define AVAIL(name) dlsym(RTLD_DEFAULT,#name)
 #define FDEF(name) static __typeof__(&name) o##name = NULL
 
-FDEF(dlsym);
-
-FDEF(glXSwapBuffers);
-FDEF(glXGetProcAddressARB);
-FDEF(glXGetProcAddress);
-
-#define RESOLVE(x) if (! o##x) o##x = (__typeof__(&x)) odlsym(RTLD_NEXT, #x)
-
-static void resolveOpenGL() {
-	RESOLVE(glXSwapBuffers);
-
-	if (! oglXSwapBuffers) {
-		void *lib = dlopen("libGL.so.1", RTLD_GLOBAL | RTLD_NOLOAD);
-		if (! lib)
-			return;
-		RESOLVE(glXSwapBuffers);
-		if (! oglXSwapBuffers)
-			dlclose(lib);
-	}
-
-	RESOLVE(glXGetProcAddressARB);
-	RESOLVE(glXGetProcAddress);
-}
+#if defined(TARGET_UNIX)
+ FDEF(dlsym);
+ FDEF(glXSwapBuffers);
+ FDEF(glXGetProcAddressARB);
+ FDEF(glXGetProcAddress);
+#elif defined(TARGET_MAC)
+ FDEF(CGLFlushDrawable);
+ FDEF(CGDisplayHideCursor);
+ FDEF(CGDisplayShowCursor);
+#endif
 
 __attribute__((format(printf, 1, 2)))
 static void ods(const char *format, ...) {
-	if (!bDebug) {
+	if (! bDebug) {
 		return;
 	}
 
@@ -156,15 +168,16 @@ static void ods(const char *format, ...) {
 static void newContext(Context * ctx) {
 	ctx->iSocket = -1;
 	ctx->omMsg.omh.iLength = -1;
-	ctx->texture = ~0;
+	ctx->texture = ~0U;
 	ctx->timeT = clock();
 	ctx->frameCount = 0;
 
 	char *home = getenv("HOME");
 	if (home == NULL) {
 		struct passwd *pwent= getpwuid(getuid());
-		if (pwent && pwent->pw_dir && pwent->pw_dir[0])
+		if (pwent && pwent->pw_dir && pwent->pw_dir[0]) {
 			home = pwent->pw_dir;
+		}
 	}
 
 	if (home) {
@@ -193,6 +206,9 @@ static void newContext(Context * ctx) {
 	glAttachShader(ctx->uiProgram, vs);
 	glAttachShader(ctx->uiProgram, fs);
 	glLinkProgram(ctx->uiProgram);
+
+	glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &ctx->maxVertexAttribs);
+	ctx->vertexAttribStates = calloc((size_t) ctx->maxVertexAttribs, sizeof(GLboolean));
 }
 
 static void releaseMem(Context *ctx) {
@@ -203,7 +219,7 @@ static void releaseMem(Context *ctx) {
 	}
 	if (ctx->texture != ~0U) {
 		glDeleteTextures(1, &ctx->texture);
-		ctx->texture = ~0;
+		ctx->texture = ~0U;
 	}
 	ctx->uiLeft = ctx->uiTop = ctx->uiRight = ctx->uiBottom = 0;
 }
@@ -220,10 +236,11 @@ static void disconnect(Context *ctx) {
 
 static bool sendMessage(Context *ctx, struct OverlayMsg *om) {
 	if (ctx->iSocket != -1) {
-		ssize_t wantsend = sizeof(struct OverlayMsgHeader) + om->omh.iLength;
+		size_t wantsend = sizeof(struct OverlayMsgHeader) + (size_t)om->omh.iLength;
 		ssize_t sent = send(ctx->iSocket, om, wantsend, MSG_DONTWAIT);
-		if (wantsend == sent)
+		if (sent != -1 && wantsend == (size_t)sent) {
 			return true;
+		}
 		ods("Short write. Disconnecting pipe.");
 	}
 	disconnect(ctx);
@@ -231,8 +248,9 @@ static bool sendMessage(Context *ctx, struct OverlayMsg *om) {
 }
 
 static void regenTexture(Context *ctx) {
-	if (ctx->texture != ~0U)
+	if (ctx->texture != ~0U) {
 		glDeleteTextures(1, & ctx->texture);
+	}
 	glGenTextures(1, &ctx->texture);
 
 	glBindTexture(GL_TEXTURE_2D, ctx->texture);
@@ -264,6 +282,17 @@ static void drawOverlay(Context *ctx, unsigned int width, unsigned int height) {
 			return;
 		}
 		ods("Socket connected");
+
+		struct OverlayMsg om;
+		om.omh.uiMagic = OVERLAY_MAGIC_NUMBER;
+		om.omh.uiType = OVERLAY_MSGTYPE_PID;
+		om.omh.iLength = sizeof(struct OverlayMsgPid);
+		om.omp.pid = getpid();
+
+		if (!sendMessage(ctx, &om))
+			return;
+
+		ods("SentPid");
 	}
 
 	// if overlay size (width or height) is not up-to-date create and send an overlay initialization message
@@ -393,6 +422,20 @@ static void drawOverlay(Context *ctx, unsigned int width, unsigned int height) {
 						ctx->uiBottom = oma->y + oma->h;
 					}
 					break;
+				case OVERLAY_MSGTYPE_INTERACTIVE: {
+#if defined(TARGET_MAC)
+						struct OverlayMsgInteractive *omin = & ctx->omMsg.omin;
+						ods("Interactive %d", omin->state);
+						if (bCursorAvail) {
+							if (omin->state) {
+								oCGDisplayHideCursor(kCGNullDirectDisplay);
+							} else {
+								oCGDisplayShowCursor(kCGNullDirectDisplay);
+							}
+						}
+#endif
+					}
+					break;
 				default:
 					break;
 			}
@@ -404,14 +447,17 @@ static void drawOverlay(Context *ctx, unsigned int width, unsigned int height) {
 
 	// texture checks, that our gltexture is still valid and sane
 	if (! glIsTexture(ctx->texture)) {
-		ctx->texture = ~0;
+		ctx->texture = ~0U;
 		ods("Lost texture");
 		regenTexture(ctx);
 	} else {
 		glBindTexture(GL_TEXTURE_2D, ctx->texture);
 		GLfloat bordercolor[4];
 		glGetTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, bordercolor);
-		if (bordercolor[0] != fBorder[0] || bordercolor[1] != fBorder[1] || bordercolor[2] != fBorder[2] || bordercolor[3] != fBorder[3]) {
+		if (bordercolor[0] != fBorder[0]
+		    || bordercolor[1] != fBorder[1]
+		    || bordercolor[2] != fBorder[2]
+		    || bordercolor[3] != fBorder[3]) {
 			ods("Texture was hijacked! Texture will be regenerated.");
 			regenTexture(ctx);
 		}
@@ -556,6 +602,16 @@ static void drawContext(Context * ctx, int width, int height) {
 	glDisable(GL_VERTEX_PROGRAM_ARB);
 	glDisable(GL_FRAGMENT_PROGRAM_ARB);
 
+	GLint enabled;
+	for (i=0;i<ctx->maxVertexAttribs;++i) {
+		enabled = GL_FALSE;
+		glGetVertexAttribiv((GLuint)i, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &enabled);
+		if (enabled == GL_TRUE) {
+			glDisableVertexAttribArray((GLuint)i);
+			ctx->vertexAttribStates[i] = GL_TRUE;
+		}
+	}
+
 	glUseProgram(ctx->uiProgram);
 
 	glEnable(GL_COLOR_MATERIAL);
@@ -577,17 +633,28 @@ static void drawContext(Context * ctx, int width, int height) {
 	glGetIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING, &bound);
 	glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &vbobound);
 
-	if (bound != 0)
+	if (bound != 0) {
 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
-	if (vbobound != 0)
+	}
+	if (vbobound != 0) {
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
 
 	drawOverlay(ctx, width, height);
-	
-	if (bound != 0)
+
+	if (bound != 0) {
 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, bound);
-	if (vbobound != 0)
+	}
+	if (vbobound != 0) {
 		glBindBuffer(GL_ARRAY_BUFFER, vbobound);
+	}
+
+	for (i=0;i<ctx->maxVertexAttribs;++i) {
+		if (ctx->vertexAttribStates[i] == GL_TRUE) {
+			glEnableVertexAttribArray((GLuint)i);
+			ctx->vertexAttribStates[i] = GL_FALSE;
+		}
+	}
 
 	glMatrixMode(GL_TEXTURE);
 	glPopMatrix();
@@ -602,161 +669,13 @@ static void drawContext(Context * ctx, int width, int height) {
 	glPopAttrib();
 	glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
 	glUseProgram(program);
-	
+
 	// drain opengl error queue
 	while (glGetError() != GL_NO_ERROR);
 }
 
-__attribute__((visibility("default")))
-void glXSwapBuffers(Display * dpy, GLXDrawable draw) {
-	if (!oglXSwapBuffers)
-		resolveOpenGL();
-
-		GLXContext ctx = glXGetCurrentContext();
-
-		Context *c = contexts;
-		while (c) {
-			if ((c->dpy == dpy) && (c->draw == draw))
-				break;
-			c = c->next;
-		}
-
-		if (!c) {
-			ods("Current context is: %p", ctx);
-
-			c = (Context *) malloc(sizeof(Context));
-			if (!c) {
-				ods("malloc failure");
-				return;
-			}
-			memset(c, 0, sizeof(Context));
-			c->next = contexts;
-			c->dpy = dpy;
-			c->draw = draw;
-
-			c->bGlx = false;
-			c->bValid = false;
-
-			int major, minor;
-			if (glXQueryVersion(dpy, &major, &minor)) {
-				ods("GLX version %d.%d", major, minor);
-				c->bValid = true;
-				if ((major > 1) || (major==1 && minor >= 3))
-					c->bGlx = true;
-			}
-			contexts = c;
-			newContext(c);
-		}
-
-		if (c->bValid) {
-			GLuint width, height;
-			if (c->bGlx) {
-				glXQueryDrawable(dpy, draw, GLX_WIDTH, (unsigned int *) &width);
-				glXQueryDrawable(dpy, draw, GLX_HEIGHT, (unsigned int *) &height);
-			} else {
-				GLint viewport[4];
-				glGetIntegerv(GL_VIEWPORT, viewport);
-				width = viewport[2];
-				height = viewport[3];
-			}
-
-			drawContext(c, width, height);
-	}
-	oglXSwapBuffers(dpy, draw);
-}
-
-#define FGRAB(x) if (strcmp((const char *)(func), #x)==0) return (__GLXextFuncPtr)(x);
-
-__attribute__((visibility("default")))
-void (*glXGetProcAddress(const GLubyte * func))(void) {
-	FGRAB(glXSwapBuffers);
-	FGRAB(glXGetProcAddressARB);
-	FGRAB(glXGetProcAddress);
-
-	if (!oglXGetProcAddressARB && !oglXGetProcAddress)
-		resolveOpenGL();
-	if (oglXGetProcAddress)
-		return oglXGetProcAddress(func);
-	else if (oglXGetProcAddressARB)
-		return oglXGetProcAddressARB(func);
-	else
-		return (__GLXextFuncPtr)(odlsym(RTLD_NEXT, (const char *)(func)));
-}
-
-__attribute__((visibility("default")))
-__GLXextFuncPtr glXGetProcAddressARB(const GLubyte * func) {
-	return (void (*)(void)) glXGetProcAddress(func);
-}
-
-__attribute__((constructor))
-static void initializeLibrary() {
-	if (odlsym)
-		return;
-
-	if (getenv("MUMBLE_OVERLAY_DEBUG"))
-		bDebug = true;
-	else
-		bDebug = false;
-
-	ods("Mumble overlay library loaded");
-	void *dl = dlopen("libdl.so.2", RTLD_LAZY);
-	if (!dl) {
-		ods("Failed to open libdl.so.2");
-	} else {
-		int i;
-		struct link_map *lm = (struct link_map *) dl;
-		int nchains = 0;
-		ElfW(Sym) *symtab = NULL;
-		const char *strtab = NULL;
-
-		ElfW(Dyn) *dyn = lm->l_ld;
-
-		while (dyn->d_tag) {
-			switch (dyn->d_tag) {
-				case DT_HASH:
-					nchains = *(int *)(dyn->d_un.d_ptr + 4);
-					break;
-				case DT_STRTAB:
-					strtab = (const char *) dyn->d_un.d_ptr;
-					break;
-				case DT_SYMTAB:
-					symtab = (ElfW(Sym) *) dyn->d_un.d_ptr;
-					break;
-			}
-			dyn ++;
-		}
-		ods("Iterating dlsym table %p %p %d", symtab, strtab, nchains);
-		for (i=0;i<nchains;++i) {
-			// ELF32_ST_TYPE and ELF64_ST_TYPE are the same
-			if (ELF32_ST_TYPE(symtab[i].st_info) != STT_FUNC)
-				continue;
-			if (strcmp(strtab+symtab[i].st_name, "dlsym") == 0)
-				odlsym = (void*)lm->l_addr + symtab[i].st_value;
-		}
-		ods("Original dlsym at %p", odlsym);
-	}
-}
-
-#define OGRAB(name) if (handle == RTLD_DEFAULT) handle = RTLD_NEXT; symbol = odlsym(handle, #name); if (symbol) { o##name = (__typeof__(&name)) symbol; symbol = (void *) name;}
-__attribute__((visibility("default")))
-void *dlsym(void *handle, const char *name) {
-	if (!odlsym)
-		initializeLibrary();
-
-	void *symbol;
-
-	ods("Request for symbol %s (%p:%p)", name, handle, odlsym);
-
-	if (strcmp(name, "glXSwapBuffers") == 0) {
-		OGRAB(glXSwapBuffers);
-	} else if (strcmp(name, "glXGetProcAddress") == 0) {
-		OGRAB(glXGetProcAddress);
-	} else if (strcmp(name, "glXGetProcAddressARB") == 0) {
-		OGRAB(glXGetProcAddressARB);
-	} else if (strcmp(name, "dlsym") == 0) {
-		return (void *) dlsym;
-	} else {
-		symbol = odlsym(handle, name);
-	}
-	return symbol;
-}
+#if defined(TARGET_UNIX)
+# include "init_unix.c"
+#elif defined(TARGET_MAC)
+# include "init_mac.c"
+#endif

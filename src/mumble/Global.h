@@ -62,7 +62,7 @@ class CELTCodec;
 
 class QNetworkAccessManager;
 
-struct Global {
+struct Global Q_DECL_FINAL {
 private:
 	Q_DISABLE_COPY(Global)
 public:

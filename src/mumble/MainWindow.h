@@ -33,14 +33,16 @@
 #define MUMBLE_MUMBLE_MAINWINDOW_H_
 
 #include <QtCore/QtGlobal>
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+#if QT_VERSION >= 0x050000
 # include <QtCore/QPointer>
 # include <QtWidgets/QMainWindow>
 # include <QtWidgets/QSystemTrayIcon>
+# include <QtWidgets/QComboBox>
 #else
 # include <QtCore/QWeakPointer>
 # include <QtGui/QMainWindow>
 # include <QtGui/QSystemTrayIcon>
+# include <QtGui/QComboBox>
 #endif
 
 #include <QtNetwork/QAbstractSocket>
@@ -116,7 +118,7 @@ class MainWindow : public QMainWindow, public MessageHandler, public Ui::MainWin
 		bool bSuppressAskOnQuit;
 		bool bAutoUnmute;
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+#if QT_VERSION >= 0x050000
 		QPointer<Channel> cContextChannel;
 		QPointer<ClientUser> cuContextUser;
 #else
@@ -131,6 +133,7 @@ class MainWindow : public QMainWindow, public MessageHandler, public Ui::MainWin
 		void setOnTop(bool top);
 		void setShowDockTitleBars(bool doShow);
 		void updateTrayIcon();
+		void updateTransmitModeComboBox();
 		QPair<QByteArray, QImage> openImageFile();
 		static const QString defaultStyleSheet;
 
@@ -138,8 +141,11 @@ class MainWindow : public QMainWindow, public MessageHandler, public Ui::MainWin
 		void openTextMessageDialog(ClientUser *p);
 
 #ifdef Q_OS_WIN
-		Timer tInactive;
-		bool winEvent(MSG *, long *);
+#if QT_VERSION >= 0x050000
+		bool nativeEvent(const QByteArray &eventType, void *message, long *result) Q_DECL_OVERRIDE;
+#else
+		bool winEvent(MSG *, long *) Q_DECL_OVERRIDE;
+#endif
 		unsigned int uiNewHardware;
 #endif
 	protected:
@@ -159,14 +165,19 @@ class MainWindow : public QMainWindow, public MessageHandler, public Ui::MainWin
 
 		PTTButtonWidget *qwPTTButtonWidget;
 
+		QComboBox *qcbTransmitMode;
+		QAction *qaTransmitMode;
+		QAction *qaTransmitModeSeparator;
+
 		void createActions();
 		void setupGui();
-		void customEvent(QEvent *evt);
+		void customEvent(QEvent *evt) Q_DECL_OVERRIDE;
 		void findDesiredChannel();
 		void setupView(bool toggle_minimize = true);
-		virtual void closeEvent(QCloseEvent *e);
-		virtual void hideEvent(QHideEvent *e);
-		virtual void showEvent(QShowEvent *e);
+		void closeEvent(QCloseEvent *e) Q_DECL_OVERRIDE;
+		void hideEvent(QHideEvent *e) Q_DECL_OVERRIDE;
+		void showEvent(QShowEvent *e) Q_DECL_OVERRIDE;
+		void changeEvent(QEvent* event) Q_DECL_OVERRIDE;
 
 		bool handleSpecialContextMenu(const QUrl &url, const QPoint &pos_, bool focus = false);
 		Channel* getContextMenuChannel();
@@ -185,6 +196,7 @@ class MainWindow : public QMainWindow, public MessageHandler, public Ui::MainWin
 		void on_qmSelf_aboutToShow();
 		void on_qaSelfComment_triggered();
 		void on_qaSelfRegister_triggered();
+		void qcbTransmitMode_activated(int index);
 		void qmUser_aboutToShow();
 		void on_qaUserCommentReset_triggered();
 		void on_qaUserTextureReset_triggered();
@@ -277,7 +289,7 @@ class MainWindow : public QMainWindow, public MessageHandler, public Ui::MainWin
 
 	public:
 		MainWindow(QWidget *parent);
-		~MainWindow();
+		~MainWindow() Q_DECL_OVERRIDE;
 
 		// From msgHandler. Implementation in Messages.cpp
 #define MUMBLE_MH_MSG(x) void msg##x(const MumbleProto:: x &);

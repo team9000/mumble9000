@@ -54,6 +54,8 @@ MetaParams::MetaParams() {
 	iMaxUsersPerChannel = 0;
 	iMaxTextMessageLength = 5000;
 	iMaxImageMessageLength = 131072;
+	legacyPasswordHash = false;
+	kdfIterations = -1;
 	bAllowHTML = true;
 	iDefaultChan = 0;
 	bRememberChan = true;
@@ -71,6 +73,7 @@ MetaParams::MetaParams() {
 	bBonjour = true;
 	bAllowPing = true;
 	bCertRequired = false;
+	bForceExternalAuth = false;
 
 	iBanTries = 10;
 	iBanTimeframe = 120;
@@ -124,8 +127,8 @@ void MetaParams::read(QString fname) {
 		QStringList datapaths;
 
 #if defined(Q_OS_WIN)
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
-		datapaths << QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
+#if QT_VERSION >= 0x050000
+		datapaths << QStandardPaths::writableLocation(QStandardPaths::DataLocation);
 #else
 		datapaths << QDesktopServices::storageLocation(QDesktopServices::DataLocation);
 #endif
@@ -261,6 +264,8 @@ void MetaParams::read(QString fname) {
 	iTimeout = typeCheckedFromSettings("timeout", iTimeout);
 	iMaxTextMessageLength = typeCheckedFromSettings("textmessagelength", iMaxTextMessageLength);
 	iMaxImageMessageLength = typeCheckedFromSettings("imagemessagelength", iMaxImageMessageLength);
+	legacyPasswordHash = typeCheckedFromSettings("legacypasswordhash", legacyPasswordHash);
+	kdfIterations = typeCheckedFromSettings("kdfiterations", -1);
 	bAllowHTML = typeCheckedFromSettings("allowhtml", bAllowHTML);
 	iMaxBandwidth = typeCheckedFromSettings("bandwidth", iMaxBandwidth);
 	iDefaultChan = typeCheckedFromSettings("defaultchannel", iDefaultChan);
@@ -269,6 +274,7 @@ void MetaParams::read(QString fname) {
 	iMaxUsersPerChannel = typeCheckedFromSettings("usersperchannel", iMaxUsersPerChannel);
 	qsWelcomeText = typeCheckedFromSettings("welcometext", qsWelcomeText);
 	bCertRequired = typeCheckedFromSettings("certrequired", bCertRequired);
+	bForceExternalAuth = typeCheckedFromSettings("forceExternalAuth", bForceExternalAuth);
 
 	qsDatabase = typeCheckedFromSettings("database", qsDatabase);
 
@@ -456,6 +462,8 @@ void MetaParams::read(QString fname) {
 	qmConfig.insert(QLatin1String("port"),QString::number(usPort));
 	qmConfig.insert(QLatin1String("timeout"),QString::number(iTimeout));
 	qmConfig.insert(QLatin1String("textmessagelength"), QString::number(iMaxTextMessageLength));
+	qmConfig.insert(QLatin1String("legacypasswordhash"), legacyPasswordHash ?  QLatin1String("true") : QLatin1String("false"));
+	qmConfig.insert(QLatin1String("kdfiterations"), QString::number(kdfIterations));
 	qmConfig.insert(QLatin1String("allowhtml"), bAllowHTML ? QLatin1String("true") : QLatin1String("false"));
 	qmConfig.insert(QLatin1String("bandwidth"),QString::number(iMaxBandwidth));
 	qmConfig.insert(QLatin1String("users"),QString::number(iMaxUsers));
@@ -474,6 +482,7 @@ void MetaParams::read(QString fname) {
 	qmConfig.insert(QLatin1String("username"),qrUserName.pattern());
 	qmConfig.insert(QLatin1String("channelname"),qrChannelName.pattern());
 	qmConfig.insert(QLatin1String("certrequired"), bCertRequired ? QLatin1String("true") : QLatin1String("false"));
+	qmConfig.insert(QLatin1String("forceExternalAuth"), bForceExternalAuth ? QLatin1String("true") : QLatin1String("false"));
 	qmConfig.insert(QLatin1String("suggestversion"), qvSuggestVersion.isNull() ? QString() : qvSuggestVersion.toString());
 	qmConfig.insert(QLatin1String("suggestpositional"), qvSuggestPositional.isNull() ? QString() : qvSuggestPositional.toString());
 	qmConfig.insert(QLatin1String("suggestpushtotalk"), qvSuggestPushToTalk.isNull() ? QString() : qvSuggestPushToTalk.toString());

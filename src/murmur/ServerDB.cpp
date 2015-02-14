@@ -41,6 +41,7 @@
 #include "Server.h"
 #include "ServerUser.h"
 #include "User.h"
+#include "PBKDF2.h"
 
 #define SQLDO(x) ServerDB::exec(query, QLatin1String(x), true)
 #define SQLMAY(x) ServerDB::exec(query, QLatin1String(x), false, false)
@@ -48,6 +49,9 @@
 #define SQLEXEC() ServerDB::exec(query)
 #define SQLEXECBATCH() ServerDB::execBatch(query)
 #define SOFTEXEC() ServerDB::exec(query, QString(), false)
+
+void ServerDB::loadOrSetupMetaPKBDF2IterationsCount(QSqlQuery &query) {
+}
 
 ServerDB::ServerDB() {
 }
@@ -110,6 +114,11 @@ bool Server::setTexture(int id, const QByteArray &texture) {
 }
 
 void ServerDB::setSUPW(int srvnum, const QString &pw) {
+}
+
+QString ServerDB::getLegacySHA1Hash(const QString &password) {
+	QString hash;
+	return hash;
 }
 
 QString Server::getUserName(int id) {

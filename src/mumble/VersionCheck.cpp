@@ -48,7 +48,11 @@ return;
 	queryItems << qMakePair(QString::fromLatin1("date"), QString::fromLatin1(QUrl::toPercentEncoding(QLatin1String(__DATE__))));
 	queryItems << qMakePair(QString::fromLatin1("time"), QString::fromLatin1(QUrl::toPercentEncoding(QLatin1String(__TIME__))));
 #if defined(Q_OS_WIN)
+# if defined(Q_OS_WIN64)
+	queryItems << qMakePair(QString::fromLatin1("os"), QString::fromLatin1("WinX64"));
+# else
 	queryItems << qMakePair(QString::fromLatin1("os"), QString::fromLatin1("Win32"));
+# endif
 #elif defined(Q_OS_MAC)
 # if defined(USE_MAC_UNIVERSAL)
 	queryItems << qMakePair(QString::fromLatin1("os"), QString::fromLatin1("MacOSX-Universal"));
@@ -79,7 +83,7 @@ return;
 		}
 	}
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+#if QT_VERSION >= 0x050000
 	QUrlQuery query;
 	query.setQueryItems(queryItems);
 	url.setQuery(query);

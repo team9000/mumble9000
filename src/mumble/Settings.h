@@ -230,9 +230,12 @@ struct Settings {
 	QString qsPulseAudioInput, qsPulseAudioOutput;
 	QString qsOSSInput, qsOSSOutput;
 	int iPortAudioInput, iPortAudioOutput;
+
+	bool bASIOEnable;
 	QString qsASIOclass;
 	QList<QVariant> qlASIOmic;
 	QList<QVariant> qlASIOspeaker;
+
 	QString qsCoreAudioInput, qsCoreAudioOutput;
 	QString qsWASAPIInput, qsWASAPIOutput;
 	QByteArray qbaDXInput, qbaDXOutput;
@@ -314,6 +317,8 @@ struct Settings {
 	int iMaxImageHeight;
 	KeyPair kpCertificate;
 	bool bSuppressIdentity;
+
+	bool bShowTransmitModeComboBox;
 
 	// Accessibility
 	bool bHighContrast;

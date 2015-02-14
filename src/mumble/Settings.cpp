@@ -38,7 +38,6 @@
 #include "Log.h"
 #include "Global.h"
 #include "../../overlay/overlay.h"
-#include "../../overlay/overlay_blacklist.h"
 
 bool Shortcut::isServerSpecific() const {
 	if (qvData.canConvert<ShortcutTarget>()) {
@@ -155,15 +154,6 @@ OverlaySettings::OverlaySettings() {
 	bTime = false;
 
 	bUseWhitelist = false;
-
-#ifdef Q_OS_WIN
-	int i = 0;
-	while (overlayBlacklist[i]) {
-		qslBlacklist << QLatin1String(overlayBlacklist[i]);
-		i++;
-	}
-#endif
-
 }
 
 void OverlaySettings::setPreset(const OverlayPresets preset) {
@@ -242,7 +232,7 @@ void OverlaySettings::setPreset(const OverlayPresets preset) {
 
 			qaUserName = Qt::AlignLeft | Qt::AlignVCenter;
 			qaMutedDeafened = Qt::AlignRight | Qt::AlignVCenter;
-			qaAvatar = Qt::AlignRight | Qt::AlignVCenter;
+			qaAvatar = Qt::AlignCenter;
 			qaChannel = Qt::AlignLeft | Qt::AlignTop;
 			break;
 	}
@@ -319,7 +309,7 @@ Settings::Settings() {
 	bPluginCheck = true;
 #endif
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+#if QT_VERSION >= 0x050000
 	qsImagePath = QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
 #else
 	qsImagePath = QDesktopServices::storageLocation(QDesktopServices::PicturesLocation);
@@ -332,11 +322,12 @@ Settings::Settings() {
 	aotbAlwaysOnTop = OnTopNever;
 	bAskOnQuit = true;
 #ifdef Q_OS_WIN
-	// Don't enable minimize to tray by default on Windows 7 or Windows 8
+	// Don't enable minimize to tray by default on Windows >= 7
 	const QSysInfo::WinVersion winVer = QSysInfo::windowsVersion();
-	bHideInTray = (winVer != QSysInfo::WV_WINDOWS7 && winVer != QSysInfo::WV_WINDOWS8);
+	bHideInTray = (winVer != QSysInfo::WV_WINDOWS7 && winVer != QSysInfo::WV_WINDOWS8 && winVer != QSysInfo::WV_WINDOWS8_1);
 #else
-	bHideInTray = true;
+	const bool isUnityDesktop = QProcessEnvironment::systemEnvironment().value(QLatin1String("XDG_CURRENT_DESKTOP")) == QLatin1String("Unity");
+	bHideInTray = !isUnityDesktop;
 #endif
 	bStateInTray = true;
 	bUsage = true;
@@ -351,6 +342,8 @@ Settings::Settings() {
 	ssFilter = ShowReachable;
 
 	iOutputDelay = 5;
+
+	bASIOEnable = true;
 
 	qsALSAInput=QLatin1String("default");
 	qsALSAOutput=QLatin1String("default");
@@ -390,11 +383,13 @@ Settings::Settings() {
 	iMaxImageHeight = 1024;
 	bSuppressIdentity = false;
 
+	bShowTransmitModeComboBox = false;
+
 	// Accessibility
 	bHighContrast = false;
 
 	// Recording
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+#if QT_VERSION >= 0x050000
 	qsRecordingPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
 #else
 	qsRecordingPath = QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation);
@@ -423,16 +418,18 @@ Settings::Settings() {
 
 	bShortcutEnable = true;
 	bSuppressMacEventTapWarning = false;
-
-	for (int i=Log::firstMsgType; i<=Log::lastMsgType; ++i)
+	
+	for (int i=Log::firstMsgType; i<=Log::lastMsgType; ++i) {
 		qmMessages.insert(i, Settings::LogConsole | Settings::LogBalloon | Settings::LogTTS);
-
-	for (int i=Log::firstMsgType; i<=Log::lastMsgType; ++i)
 		qmMessageSounds.insert(i, QString());
+	}
 
 	qmMessageSounds[Log::CriticalError] = QLatin1String(":/Critical.ogg");
 	qmMessageSounds[Log::PermissionDenied] = QLatin1String(":/PermissionDenied.ogg");
 	qmMessageSounds[Log::SelfMute] = QLatin1String(":/SelfMutedDeafened.ogg");
+	qmMessageSounds[Log::SelfUnmute] = QLatin1String(":/SelfMutedDeafened.ogg");
+	qmMessageSounds[Log::SelfDeaf] = QLatin1String(":/SelfMutedDeafened.ogg");
+	qmMessageSounds[Log::SelfUndeaf] = QLatin1String(":/SelfMutedDeafened.ogg");
 	qmMessageSounds[Log::ServerConnected] = QLatin1String(":/ServerConnected.ogg");
 	qmMessageSounds[Log::ServerDisconnected] = QLatin1String(":/ServerDisconnected.ogg");
 	qmMessageSounds[Log::TextMessage] = QLatin1String(":/TextMessage.ogg");
@@ -682,6 +679,7 @@ void Settings::load(QSettings* settings_ptr) {
 	SAVELOAD(iJitterBufferSize, "net/jitterbuffer");
 	SAVELOAD(iFramesPerPacket, "net/framesperpacket");
 
+	SAVELOAD(bASIOEnable, "asio/enable");
 	SAVELOAD(qsASIOclass, "asio/class");
 	SAVELOAD(qlASIOmic, "asio/mic");
 	SAVELOAD(qlASIOspeaker, "asio/speaker");
@@ -765,6 +763,7 @@ void Settings::load(QSettings* settings_ptr) {
 	SAVELOAD(bShowContextMenuInMenuBar, "ui/showcontextmenuinmenubar");
 	SAVELOAD(qbaConnectDialogGeometry, "ui/connect/geometry");
 	SAVELOAD(qbaConnectDialogHeader, "ui/connect/header");
+	SAVELOAD(bShowTransmitModeComboBox, "ui/transmitmodecombobox");
 	SAVELOAD(bHighContrast, "ui/HighContrast");
 	SAVELOAD(iMaxLogBlocks, "ui/MaxLogBlocks");
 
@@ -993,6 +992,7 @@ void Settings::save() {
 	SAVELOAD(iJitterBufferSize, "net/jitterbuffer");
 	SAVELOAD(iFramesPerPacket, "net/framesperpacket");
 
+	SAVELOAD(bASIOEnable, "asio/enable");
 	SAVELOAD(qsASIOclass, "asio/class");
 	SAVELOAD(qlASIOmic, "asio/mic");
 	SAVELOAD(qlASIOspeaker, "asio/speaker");
@@ -1073,6 +1073,7 @@ void Settings::save() {
 	SAVELOAD(bShowContextMenuInMenuBar, "ui/showcontextmenuinmenubar");
 	SAVELOAD(qbaConnectDialogGeometry, "ui/connect/geometry");
 	SAVELOAD(qbaConnectDialogHeader, "ui/connect/header");
+	SAVELOAD(bShowTransmitModeComboBox, "ui/transmitmodecombobox");
 	SAVELOAD(bHighContrast, "ui/HighContrast");
 	SAVELOAD(iMaxLogBlocks, "ui/MaxLogBlocks");
 

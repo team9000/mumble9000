@@ -39,8 +39,13 @@ typedef long long uint64_t;
 
 #include "../mumble_plugin_win32.h"
 
+struct guid {
+	uint64_t first;
+	uint64_t second;
+};
+
 uint32_t p_playerBase;
-uint64_t g_playerGUID;
+guid g_playerGUID;
 
 /*
  * To update visit http://www.ownedcore.com/forums/world-of-warcraft/world-of-warcraft-bots-programs/wow-memory-editing
@@ -50,10 +55,17 @@ uint64_t g_playerGUID;
  * call each value, to ease in upgrading. "[_]" means the value name may or may not
  * have an underscore in it depending on who's posting the offset.
  */
-static uint32_t ptr_ClientConnection=0xEC4140; // ClientConnection or CurMgrPointer
-static size_t off_ObjectManager=0x462C; // objectManager or CurMgrOffset
-static uint32_t ptr_WorldFrame=0xD6496C; // Camera[_]Pointer
-static size_t off_CameraOffset=0x8208; // Camera[_]Offset
+static uint32_t ptr_ClientConnection=0xED5C90; // ClientConnection or CurMgrPointer
+static uint32_t off_ObjectManager=0x62C; // objectManager or CurMgrOffset
+static uint32_t ptr_WorldFrame=0xD93E30; // Camera[_]Pointer, CameraStruct
+static uint32_t off_CameraOffset=0x7610; // Camera[_]Offset
+static uint32_t ptr_PlayerName=0xED5CD0; // PlayerName
+static uint32_t ptr_RealmName=0xED5E7E; // RealmName
+
+static uint32_t off_localGUID = 0xF8; // localGUID
+static uint32_t off_firstObject = 0xD8; // firstObject
+static uint32_t off_nextObject = 0x3C; // nextObject
+static uint32_t off_objectGUID = 0x28;
 
 uint32_t getInt32(uint32_t ptr) {
 	uint32_t result;
@@ -96,7 +108,7 @@ int getCStringN(uint32_t ptr, char *buffer, size_t buffersize) {
 	buffer[buffersize-1] = '\0';
 
 	if (ok && (r == buffersize)) {
-		return strlen(buffer);
+		return static_cast<int>(strlen(buffer));
 	} else {
 		return 0;
 	}
@@ -124,11 +136,11 @@ int getWString(uint32_t ptr, std::wstring &buffer) {
 	                                 wbuf, 1024);
 	buffer.assign(wbuf, wbufLength);
 
-	return 0;
+	return wbufLength;
 }
 
-void getDebug16(uint32_t ptr) {
 #ifdef _DEBUG
+void getDebug16(uint32_t ptr) {
 	unsigned char buf[16];
 	SIZE_T r;
 	BOOL ok=ReadProcessMemory(hProcess, (void *)ptr, &buf, sizeof(buf), &r);
@@ -141,11 +153,9 @@ void getDebug16(uint32_t ptr) {
 		       buf[12], buf[13], buf[14], buf[15]
 		      );
 	}
-#endif
 }
 
 void stringDebug(std::string &theString) {
-#ifdef _DEBUG
 	std::cout << "String length=" << theString.length() << " content=\"" << theString << "\" debug=";
 	for (size_t i=0; i<theString.length(); i++) {
 		if (i>0) {
@@ -154,32 +164,36 @@ void stringDebug(std::string &theString) {
 		std::cout << (unsigned int)theString[i];
 	}
 	std::cout << std::endl;
-#endif
 }
+#endif
 
 uint32_t getPlayerBase() {
 	uint32_t gClientConnection;
 	uint32_t sCurMgr;
 	uint32_t curObj;
-	uint64_t playerGUID;
+	guid playerGUID;
 	uint32_t playerBase;
 
 	uint32_t nextObj;
-	uint64_t GUID;
+	guid GUID;
 
 	playerBase=0;
 
 	gClientConnection=getInt32((uint32_t)pModule + ptr_ClientConnection);
 	sCurMgr=getInt32(gClientConnection + off_ObjectManager);
 	if (sCurMgr != 0) {
-		playerGUID=getInt64(sCurMgr+0xE8); // localGUID
-		if (playerGUID != 0) {
-			g_playerGUID = playerGUID;
-			curObj=getInt32(sCurMgr+0xCC); // firstObject
+		playerGUID.first=getInt64(sCurMgr+off_localGUID);
+		playerGUID.second=getInt64(sCurMgr+off_localGUID + 0x8);
+		if (playerGUID.second != 0) {
+			g_playerGUID.first = playerGUID.first;
+			g_playerGUID.second = playerGUID.second;
+
+			curObj=getInt32(sCurMgr+off_firstObject); // firstObject
 			while (curObj != 0) {
-				nextObj=getInt32(curObj + 0x34); // nextObject
-				GUID=getInt64(curObj + 0x28);
-				if (playerGUID == GUID) {
+				nextObj=getInt32(curObj + off_nextObject); // nextObject
+				GUID.first=getInt64(curObj + off_objectGUID);
+				GUID.second=getInt64(curObj + off_objectGUID + 0x8);
+				if (playerGUID.first == GUID.first && playerGUID.second == GUID.second) {
 					playerBase = curObj;
 					break;
 				} else if (curObj == nextObj) {
@@ -194,41 +208,15 @@ uint32_t getPlayerBase() {
 	return playerBase;
 }
 
-static const unsigned long nameStorePtr        = 0xC86358;  // Player name database
-static const unsigned long nameMaskOffset      = 0x02c;  // Offset for the mask used with GUID to select a linked list
-static const unsigned long nameBaseOffset      = 0x020;  // Offset for the start of the name linked list
-static const unsigned long nameStringOffset    = 0x021;  // Offset to the C string in a name structure
-
 void getPlayerName(std::wstring &identity) {
-	unsigned long mask, base, offset, current, shortGUID, testGUID;
-
-	mask = getInt32((uint32_t)pModule + nameStorePtr + nameMaskOffset);
-	base = getInt32((uint32_t)pModule + nameStorePtr + nameBaseOffset);
-
-	shortGUID = g_playerGUID & 0xffffffff;  // Only half the guid is used to check for a hit
-	if (mask == 0xffffffff) {
-		identity.clear();
-		return;
-	}
-	offset = 12 * (mask & shortGUID);  // select the appropriate linked list
-	current=getInt32(base + offset + 8);   // ptr to lower half of GUID of first element
-	offset = getInt32(base + offset);  // this plus 4 is the offset for the next element
-	if ((current == 0) || (current & 0x1)) {
-		identity.clear();
-		return;
-	}
-	testGUID=getInt32(current);
-
-	while (testGUID != shortGUID) {
-		current=getInt32(current + offset + 4);
-		if ((current == 0) || (current & 0x1)) {
-			identity.clear();
-			return;
-		}
-		testGUID=getInt32(current);
-	}
-	getWString(current + nameStringOffset, identity);
-	//printf("%ls\n", identity.data());
+	std::wstring playerName, realmName;
+	
+	getWString((uint32_t)pModule + ptr_PlayerName, playerName);
+	getWString((uint32_t)pModule + ptr_RealmName, realmName);
+	
+	identity = playerName + L"-" + realmName;
+	//printf("Name: %ls\n", identity.data());
+	return;
 }
 
 void getCamera(float camera_pos[3], float camera_front[3], float camera_top[3]) {
@@ -267,7 +255,7 @@ typedef class WowData {
 		std::wstring nameAvatar;
 		bool nameAvatarValid;
 
-		uint64_t playerGUID;
+		guid playerGUID;
 		uint32_t pointerPlayerObject;
 
 	public:
@@ -306,22 +294,26 @@ static int fetch(float *avatar_pos, float *avatar_front, float *avatar_top, floa
 	}
 
 	/* are we still looking at the right object? */
-	uint64_t peekGUID, tempGUID;
-	peekGUID=getInt64(p_playerBase+0x30);
-	if (g_playerGUID != peekGUID) {
+	guid peekGUID, tempGUID;
+	peekGUID.first=getInt64(p_playerBase+0x30);
+	peekGUID.second=getInt64(p_playerBase+0x30+0x8);
+	if (g_playerGUID.first != peekGUID.first || g_playerGUID.second != peekGUID.second) {
 		/* no? Try to resynch to the new address. Happens when walking through portals quickly (aka no or short loading screen) */
-		tempGUID = g_playerGUID;
+		tempGUID.first = g_playerGUID.first;
+		tempGUID.second = g_playerGUID.second;
 		p_playerBase=getPlayerBase();
-		if (tempGUID != g_playerGUID) {
+		if (tempGUID.first != g_playerGUID.first || tempGUID.first != g_playerGUID.first) {
 			/* GUID of actor changed, likely a character and/or realm change */
 			wow.refresh();
 		}
-		peekGUID=getInt64(p_playerBase+0x28);
-		if (g_playerGUID != peekGUID) {
+		peekGUID.first=getInt64(p_playerBase+0x28);
+		peekGUID.second=getInt64(p_playerBase+0x28+0x8);
+		if (g_playerGUID.first != peekGUID.first || g_playerGUID.second != peekGUID.second) {
 			/* no? we are still getting the expected GUID for our avatar, but we don't have it's current position */
 			return true;
 		}
 	}
+
 	context.clear();
 	std::wstringstream identityStream;
 	identityStream << wow.getNameAvatar();
@@ -336,15 +328,16 @@ static int fetch(float *avatar_pos, float *avatar_front, float *avatar_top, floa
 	// ... which isn't a right-hand coordinate system.
 
 	float pos[3];
-	ok = ok && peekProc((BYTE *) p_playerBase + 0x838, pos, sizeof(float)*3);
+	ok = ok && peekProc((BYTE *) p_playerBase + 0xA50, pos, sizeof(float)*3);
 	if (! ok) {
-		if (g_playerGUID == 0xffffffffffffffff) {
+		if (g_playerGUID.second == 0xffffffffffffffff) {
 			return false;
-		} else if (g_playerGUID == 0) {
+		} else if (g_playerGUID.second == 0) {
 			return true;
 		} else {
 			/* FIXME need a better way to mark PlayerBase invalid */
-			g_playerGUID=0;
+			g_playerGUID.first=0;
+			g_playerGUID.second=0;
 			return true; /* we got a good reference for an avatar, but no good position */
 		}
 	}
@@ -355,12 +348,12 @@ static int fetch(float *avatar_pos, float *avatar_front, float *avatar_top, floa
 	avatar_pos[2] = pos[0];
 
 	float heading=0.0;
-	ok = ok && peekProc((BYTE *) p_playerBase + 0x848, &heading, sizeof(heading));
+	ok = ok && peekProc((BYTE *) p_playerBase + 0xA60, &heading, sizeof(heading));
 	if (! ok)
 		return false;
 
 	float pitch=0.0;
-	ok = ok && peekProc((BYTE *) p_playerBase + 0x84C, &pitch, sizeof(pitch));
+	ok = ok && peekProc((BYTE *) p_playerBase + 0xA70, &pitch, sizeof(pitch));
 	if (! ok)
 		return false;
 
@@ -416,10 +409,10 @@ static int trylock(const std::multimap<std::wstring, unsigned long long int> &pi
 }
 
 static const std::wstring longdesc() {
-	return std::wstring(L"Supports World of Warcraft 5.4.7 (18019), with identity support.");
+	return std::wstring(L"Supports World of Warcraft 6.0.3 (19103), with identity support.");
 }
 
-static std::wstring description(L"World of Warcraft 5.4.7 (18019)");
+static std::wstring description(L"World of Warcraft 6.0.3 (19103)");
 
 static std::wstring shortname(L"World of Warcraft");
 

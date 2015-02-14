@@ -293,7 +293,7 @@ void ServerHandler::run() {
 	bUdp = false;
 
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+#if QT_VERSION >= 0x050000
 	qtsSock->setProtocol(QSsl::TlsV1_0);
 #else
 	qtsSock->setProtocol(QSsl::TlsV1);
@@ -663,10 +663,9 @@ void ServerHandler::requestUserStats(unsigned int uiSession, bool statsOnly) {
 	sendMessage(mpus);
 }
 
-void ServerHandler::joinChannel(unsigned int channel) {
+void ServerHandler::joinChannel(unsigned int uiSession, unsigned int channel) {
 	MumbleProto::UserState mpus;
-	// TODO: remove global uiSession reference
-	mpus.set_session(g.uiSession);
+	mpus.set_session(uiSession);
 	mpus.set_channel_id(channel);
 	sendMessage(mpus);
 }
@@ -792,6 +791,13 @@ void ServerHandler::setUserTexture(unsigned int uiSession, const QByteArray &qba
 	if (! texture.isEmpty()) {
 		Database::setBlob(sha1(texture), texture);
 	}
+}
+
+void ServerHandler::setTokens(const QStringList &tokens) {
+	MumbleProto::Authenticate msg;
+	foreach(const QString &qs, tokens)
+		msg.add_tokens(u8(qs));
+	sendMessage(msg);
 }
 
 void ServerHandler::removeChannel(unsigned int channel) {

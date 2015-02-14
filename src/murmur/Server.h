@@ -91,7 +91,11 @@ class SslServer : public QTcpServer {
 		Q_DISABLE_COPY(SslServer)
 	protected:
 		QList<QSslSocket *> qlSockets;
-		void incomingConnection(qintptr);
+#if QT_VERSION >= 0x050000
+		void incomingConnection(qintptr) Q_DECL_OVERRIDE;
+#else
+		void incomingConnection(int) Q_DECL_OVERRIDE;
+#endif
 	public:
 		QSslSocket *nextPendingSSLConnection();
 		SslServer(QObject *parent = NULL);
@@ -141,6 +145,7 @@ class Server : public QThread {
 		QString qsPassword;
 		QString qsWelcomeText;
 		bool bCertRequired;
+		bool bForceExternalAuth;
 
 		QString qsRegName;
 		QString qsRegPassword;
