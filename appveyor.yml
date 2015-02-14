@@ -1,0 +1,9 @@
+version: '{build}'
+os: Unstable
+cache: c:\cache
+build_script:
+- SET PATH=c:\cygwin\bin;%PATH%
+- bash appveyor.sh
+test: off
+artifacts:
+- path: dist/*

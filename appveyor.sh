@@ -28,7 +28,7 @@ function download {
 	local MD5="$(echo -n "$URL" | md5sum | cut -f1 -d" ")"
 	local CACHEDIR
 	if [ -n "${APPVEYOR-}" ]; then
-		CACHEDIR="/c/cygdrive/cache"
+		CACHEDIR="/cygdrive/c/cache"
 	else
 		CACHEDIR="$ROOT/cache"
 	fi
