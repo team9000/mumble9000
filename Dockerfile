@@ -6,6 +6,17 @@ RUN apt-get update \
 
 ADD . /src
 
-RUN cd /src \
+RUN useradd -m murmur \
+    && mv /src /home/murmur/src \
+    && chown -R murmur:murmur /home/murmur
+
+USER murmur
+
+RUN cd /home/murmur/src \
     && qmake -recursive main.pro CONFIG+=no-client CONFIG+=no-ice CONFIG+=no-dbus CONFIG+=no-bonjour \
-    && make
+    && make \
+    && mv release/murmurd /tmp/murmurd \
+    && rm -Rf /home/murmur/src \
+    && mv /tmp/murmurd /home/murmur/murmurd
+
+CMD [ "/home/murmur/murmurd" ]
