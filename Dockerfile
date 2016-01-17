@@ -19,4 +19,4 @@ RUN cd /home/murmur/src \
     && rm -Rf /home/murmur/src \
     && mv /tmp/murmurd /home/murmur/murmurd
 
-CMD [ "/home/murmur/murmurd" ]
+CMD [ "/home/murmur/murmurd", "-fg" ]
